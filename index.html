@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AR Heritage Scanner — University of San Agustin</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#03090f;font-family:'Courier New',Courier,monospace;touch-action:none}
+canvas{display:block;position:fixed;top:0;left:0;z-index:1}
+.arc{position:fixed;width:36px;height:36px;z-index:10;pointer-events:none}
+.arc-tl{top:58px;left:14px;border-top:2px solid #22c55e;border-left:2px solid #22c55e}
+.arc-tr{top:58px;right:14px;border-top:2px solid #22c55e;border-right:2px solid #22c55e}
+.arc-bl{bottom:98px;left:14px;border-bottom:2px solid #22c55e;border-left:2px solid #22c55e}
+.arc-br{bottom:98px;right:14px;border-bottom:2px solid #22c55e;border-right:2px solid #22c55e}
+#scan{position:fixed;left:12px;right:12px;height:1px;background:rgba(34,197,94,0.6);z-index:9;pointer-events:none;box-shadow:0 0 8px rgba(34,197,94,0.35)}
+#hud-top{position:fixed;top:0;left:0;right:0;padding:12px 20px 30px;background:linear-gradient(to bottom,rgba(3,9,15,0.9),transparent);display:flex;justify-content:space-between;align-items:center;z-index:10;pointer-events:none}
+#xhair{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;z-index:9;opacity:0.25;pointer-events:none}
+#bld-select{position:fixed;top:56px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:20}
+.bld-btn{padding:5px 14px;font-size:10px;font-family:'Courier New',monospace;letter-spacing:.1em;border-radius:4px;cursor:pointer;transition:all .2s}
+#bld-tag{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:rgba(3,9,15,0.9);border:.5px solid #22c55e;padding:4px 18px;border-radius:3px;white-space:nowrap;font-size:10px;color:#22c55e;letter-spacing:.08em;z-index:10;pointer-events:none}
+#gps,#hint{position:fixed;bottom:124px;font-size:9px;color:#1e3a54;letter-spacing:.05em;z-index:10;pointer-events:none}
+#gps{left:18px}#hint{right:18px;transition:opacity 1.2s}
+#mode-lbl{position:fixed;top:98px;right:16px;font-size:8.5px;letter-spacing:.1em;z-index:10;pointer-events:none;text-align:right;line-height:1.6;color:#2e4d6a}
+.ip{position:fixed;bottom:88px;left:0;right:0;background:rgba(3,6,14,0.97);padding:15px 22px 13px;transform:translateY(200%);transition:transform .32s cubic-bezier(.4,0,.2,1);z-index:20;max-height:185px;overflow:hidden}
+#btn-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(4,9,20,0.97);border-top:.5px solid #0c1d34;padding:10px 16px 22px;display:flex;justify-content:space-around;align-items:center;z-index:20}
+.ab{background:transparent;border:.5px solid #16253a;border-radius:8px;padding:8px 5px 7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;width:70px;transition:all .2s}
+.al{font-size:7.5px;font-family:'Courier New',monospace;letter-spacing:.1em;color:#2e4d6a;transition:color .2s}
+@keyframes rp{0%,100%{opacity:1}50%{opacity:.1}}
+.rec{animation:rp 1.6s ease-in-out infinite}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="arc arc-tl"></div><div class="arc arc-tr"></div>
+<div class="arc arc-bl"></div><div class="arc arc-br"></div>
+<div id="scan"></div>
+<div id="hud-top">
+  <div style="display:flex;align-items:center;gap:6px">
+    <div class="rec" style="width:6px;height:6px;background:#22c55e;border-radius:50%;flex-shrink:0"></div>
+    <span style="color:#2a5070;font-size:10px;letter-spacing:.1em">AR·LIVE</span>
+  </div>
+  <span style="color:#4a7898;font-size:11px;letter-spacing:.15em">HERITAGE SCAN</span>
+  <span style="color:#2a5070;font-size:10px">GPS◉</span>
+</div>
+<div id="bld-select">
+  <button id="bld-herrera" class="bld-btn" onclick="switchBld('herrera')" style="background:#0f2744;color:#60a5fa;border:.5px solid #1d4ed8">HERRERA HALL</button>
+  <button id="bld-dolce" class="bld-btn" onclick="switchBld('dolce')" style="background:transparent;color:#475569;border:.5px solid #334155">DOLCE GARCIA HALL</button>
+</div>
+<svg id="xhair" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="27" cy="27" r="19" stroke="#22c55e" stroke-width="0.8"/>
+  <line x1="4" y1="27" x2="17" y2="27" stroke="#22c55e" stroke-width="0.8"/>
+  <line x1="37" y1="27" x2="50" y2="27" stroke="#22c55e" stroke-width="0.8"/>
+  <line x1="27" y1="4" x2="27" y2="17" stroke="#22c55e" stroke-width="0.8"/>
+  <line x1="27" y1="37" x2="27" y2="50" stroke="#22c55e" stroke-width="0.8"/>
+  <circle cx="27" cy="27" r="2" fill="#22c55e" opacity="0.5"/>
+</svg>
+<div id="bld-tag"><span id="bld-lbl">HERRERA HALL ◆ c.1946</span></div>
+<div id="gps"><span id="gps-txt">10.7202°N&nbsp;122.5621°E</span></div>
+<div id="hint">⟳ DRAG TO ROTATE</div>
+<div id="mode-lbl"></div>
+
+<div id="ip-h" class="ip" style="border-top:1.5px solid #d97706">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><div style="width:7px;height:7px;background:#d97706;border-radius:1px;flex-shrink:0"></div><span style="color:#d97706;font-size:9.5px;letter-spacing:.12em">HISTORICAL VALUE</span></div>
+  <div style="font-size:11px;line-height:1.7;color:#b0bccf">
+    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#d97706;flex-shrink:0">◆</span><span>Built <b style="color:#fbbf24">c.1946–1948</b> during post-war reconstruction</span></div>
+    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#d97706;flex-shrink:0">◆</span><span>Named after <b style="color:#fbbf24">Fray Diego de Herrera, OSA</b></span></div>
+    <div style="display:flex;gap:6px"><span style="color:#d97706;flex-shrink:0">◆</span><span>Symbol of resilience &amp; university rebuilding</span></div>
+  </div>
+  <div style="margin-top:8px;padding-top:7px;border-top:.5px solid #182a40"><span style="font-size:8.5px;color:#d97706;letter-spacing:.06em">UNITAS · CARITAS · VERITAS</span></div>
+</div>
+<div id="ip-a" class="ip" style="border-top:1.5px solid #10b981">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><div style="width:7px;height:7px;background:#10b981;border-radius:1px;flex-shrink:0"></div><span style="color:#10b981;font-size:9.5px;letter-spacing:.12em">ARCHITECTURAL VALUE</span></div>
+  <div style="font-size:11px;line-height:1.7;color:#b0bccf">
+    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">◆</span><span><b style="color:#34d399">Neoclassical</b> symmetry &amp; proportion — 6 Doric columns</span></div>
+    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">◆</span><span>Durable <b style="color:#34d399">masonry &amp; concrete</b> construction</span></div>
+    <div style="display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">◆</span><span>Strong façade: <b style="color:#34d399">columns · pediment · entablature</b></span></div>
+  </div>
+  <div style="margin-top:8px;padding-top:7px;border-top:.5px solid #182a40"><span style="font-size:8.5px;color:#10b981;letter-spacing:.06em">INSTITUTIONAL NEOCLASSICAL — ILOILO, PH</span></div>
+</div>
+<div id="ip-c" class="ip" style="border-top:1.5px solid #f97316">
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><div style="width:7px;height:7px;background:#f97316;border-radius:1px;flex-shrink:0"></div><span style="color:#f97316;font-size:9.5px;letter-spacing:.12em">CONDITION MONITORING</span></div>
+  <div style="font-size:11px;line-height:1.7;color:#b0bccf">
+    <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:6px;align-items:center"><span style="color:#f97316;font-size:10px">▲</span>Structural cracks</span><span style="font-size:8px;color:#f97316;font-family:'Courier New',monospace;background:rgba(249,115,22,.1);padding:2px 6px;border-radius:2px">MONITOR</span></div>
+    <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:6px;align-items:center"><span style="color:#f97316;font-size:10px">▲</span>Moisture damage</span><span style="font-size:8px;color:#f97316;font-family:'Courier New',monospace;background:rgba(249,115,22,.1);padding:2px 6px;border-radius:2px">MONITOR</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:6px;align-items:center"><span style="color:#f97316;font-size:10px">▲</span>Material decay</span><span style="font-size:8px;color:#f97316;font-family:'Courier New',monospace;background:rgba(249,115,22,.1);padding:2px 6px;border-radius:2px">MONITOR</span></div>
+  </div>
+  <div style="margin-top:8px;padding-top:7px;border-top:.5px solid #182a40"><span style="font-size:8.5px;color:#475569;letter-spacing:.06em">3D CRACK MARKERS VISIBLE ON MODEL</span></div>
+</div>
+<div id="ip-f" class="ip" style="border-top:1.5px solid #06b6d4">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+    <div style="display:flex;align-items:center;gap:7px"><div style="width:7px;height:7px;background:#06b6d4;border-radius:1px"></div><span style="color:#06b6d4;font-size:9.5px;letter-spacing:.12em">FUTURE OVERLAY</span></div>
+    <span id="ovs" style="font-size:8px;font-family:'Courier New',monospace;color:#06b6d4;background:rgba(6,182,212,.1);padding:2px 7px;border-radius:2px;transition:all .4s">EXISTING</span>
+  </div>
+  <div style="font-size:11px;line-height:1.7;color:#b0bccf">
+    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#06b6d4;flex-shrink:0">◆</span><span><b style="color:#67e8f9">Adaptive Reuse</b> — evolving academic functions</span></div>
+    <div style="display:flex;gap:6px"><span style="color:#06b6d4;flex-shrink:0">◆</span><span>Proposed 3D extensions in <b style="color:#ea580c">orange wireframe</b></span></div>
+  </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+    <span style="font-size:8px;color:#2e4d6a;min-width:48px">EXISTING</span>
+    <div style="flex:1;height:3px;background:#0c1e35;border-radius:1.5px;overflow:hidden"><div id="ovb" style="height:3px;width:0%;background:#06b6d4;border-radius:1.5px;transition:width 2.4s ease,background 2.4s"></div></div>
+    <span style="font-size:8px;color:#ea580c;min-width:52px;text-align:right">PROPOSED</span>
+  </div>
+</div>
+
+<div id="btn-bar">
+  <button id="btn-h" class="ab" onclick="pick('h')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 13.5V5.8L8 2.5l6 3.3v7.7H2z" stroke="#d97706" stroke-width="1.1" fill="none"/><rect x="5" y="8.5" width="2" height="5" fill="#d97706"/><rect x="9" y="8.5" width="2" height="5" fill="#d97706"/><rect x="5" y="5.2" width="6" height="2" fill="#d97706"/></svg>
+    <span id="lbl-h" class="al">HISTORY</span>
+  </button>
+  <button id="btn-a" class="ab" onclick="pick('a')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="8,1.5 14.5,6.5 1.5,6.5" stroke="#10b981" stroke-width="1.1" fill="none"/><rect x="1.5" y="6.5" width="13" height="1" fill="#10b981"/><rect x="3" y="7.5" width="1.5" height="6.5" fill="#10b981"/><rect x="7.25" y="7.5" width="1.5" height="6.5" fill="#10b981"/><rect x="11.5" y="7.5" width="1.5" height="6.5" fill="#10b981"/><rect x="1.5" y="14" width="13" height="1" fill="#10b981"/></svg>
+    <span id="lbl-a" class="al">ARCHITECT</span>
+  </button>
+  <button id="btn-c" class="ab" onclick="pick('c')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="8,1.5 15.5,14.5 .5,14.5" stroke="#f97316" stroke-width="1.1" fill="none"/><line x1="8" y1="6" x2="8" y2="10.5" stroke="#f97316" stroke-width="1.3"/><circle cx="8" cy="12.5" r=".9" fill="#f97316"/></svg>
+    <span id="lbl-c" class="al">CONDITION</span>
+  </button>
+  <button id="btn-f" class="ab" onclick="pick('f')">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="8" width="14" height="6.5" stroke="#06b6d4" stroke-width="1" fill="none"/><rect x="3" y="3.5" width="10" height="4.5" stroke="#06b6d4" stroke-width=".8" stroke-dasharray="2,1.2" fill="none"/><line x1="8" y1="1.5" x2="8" y2="3.5" stroke="#06b6d4" stroke-width=".9"/><line x1="6.5" y1="2.5" x2="9.5" y2="2.5" stroke="#06b6d4" stroke-width=".9"/></svg>
+    <span id="lbl-f" class="al">FUTURE</span>
+  </button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── RENDERER ──────────────────────────────────────────────────────────────────
+var renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x03090f);
+scene.fog = new THREE.Fog(0x03090f, 22, 40);
+
+var camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 4, 11);
+camera.lookAt(0, 1.8, 0);
+
+// ── LIGHTS ────────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x304060, 3.5));
+var sun = new THREE.DirectionalLight(0x6090e0, 2.2);
+sun.position.set(5, 10, 7); sun.castShadow = true;
+scene.add(sun);
+var rim = new THREE.DirectionalLight(0x102050, 1.0);
+rim.position.set(-5, 3, -5);
+scene.add(rim);
+var fill = new THREE.PointLight(0x2060c0, 1.8, 22);
+fill.position.set(0, 6, 6);
+scene.add(fill);
+
+// ── GROUND ────────────────────────────────────────────────────────────────────
+scene.add(new THREE.GridHelper(30, 30, 0x0d2444, 0x060f1e));
+var gp = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.4 }));
+gp.rotation.x = -Math.PI / 2; gp.receiveShadow = true; scene.add(gp);
+
+// ── SINGLE WORLD GROUP ────────────────────────────────────────────────────────
+var world = new THREE.Group();
+scene.add(world);
+
+// ── MATERIALS ─────────────────────────────────────────────────────────────────
+var MB = new THREE.MeshPhongMaterial({ color:0x1a3a6e, emissive:0x081830, specular:0x4080c0, shininess:40 });
+var MC = new THREE.MeshPhongMaterial({ color:0x1e4480, emissive:0x0a1e3c, specular:0x5090d0, shininess:60 });
+var MW = new THREE.MeshPhongMaterial({ color:0x04102a, emissive:0x102866, emissiveIntensity:0.9 });
+var LE = new THREE.LineBasicMaterial({ color:0x4878c8 });
+var LC = new THREE.LineBasicMaterial({ color:0x5090d8 });
+var LW = new THREE.LineBasicMaterial({ color:0x2050a0 });
+
+// ── BUILDING GROUP ────────────────────────────────────────────────────────────
+var bldg = new THREE.Group();
+world.add(bldg);
+
+function addBox(w, h, d, mat, x, y, z) {
+  var g = new THREE.BoxGeometry(w, h, d);
+  var m = new THREE.Mesh(g, mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; bldg.add(m);
+  var el = new THREE.LineSegments(new THREE.EdgesGeometry(g), LE); el.position.set(x,y,z); bldg.add(el);
+}
+function addCyl(rt, rb, h, seg, mat, lmat, x, y, z) {
+  var g = new THREE.CylinderGeometry(rt,rb,h,seg);
+  var m = new THREE.Mesh(g, mat); m.position.set(x,y,z); m.castShadow=true; bldg.add(m);
+  var el = new THREE.LineSegments(new THREE.EdgesGeometry(g), lmat||LC); el.position.set(x,y,z); bldg.add(el);
+}
+
+// Steps
+addBox(5.8,0.14,3.0,MB, 0,0.07,0);
+addBox(5.4,0.14,2.8,MB, 0,0.21,0);
+addBox(5.0,0.14,2.6,MB, 0,0.35,0);
+// Platform
+addBox(4.8,0.24,2.5,MB, 0,0.59,0);
+
+// Main body (keep reference for overlays)
+var bodyGeo = new THREE.BoxGeometry(4.8,2.4,2.5);
+var bodyM = new THREE.Mesh(bodyGeo, MB); bodyM.position.set(0,1.87,0); bodyM.castShadow=true; bodyM.receiveShadow=true; bldg.add(bodyM);
+var bodyE = new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeo), LE); bodyE.position.set(0,1.87,0); bldg.add(bodyE);
+
+// Entablature
+addBox(5.0, 0.12,2.65,MC, 0,3.19,0);
+addBox(4.96,0.22,2.62,MB, 0,3.37,0);
+addBox(5.04,0.12,2.67,MC, 0,3.54,0);
+
+// Pediment
+var ps = new THREE.Shape();
+ps.moveTo(-2.52,0); ps.lineTo(2.52,0); ps.lineTo(0,1.12); ps.closePath();
+var pedGeo = new THREE.ExtrudeGeometry(ps, { depth:2.68, bevelEnabled:false });
+var pedM = new THREE.Mesh(pedGeo, MB); pedM.position.set(0,3.60,-1.34); pedM.castShadow=true; bldg.add(pedM);
+var pedE = new THREE.LineSegments(new THREE.EdgesGeometry(pedGeo), LE); pedE.position.set(0,3.60,-1.34); bldg.add(pedE);
+
+// Oculus
+var oG = new THREE.CylinderGeometry(0.23,0.23,0.07,20);
+var oM = new THREE.Mesh(oG, MW); oM.rotation.x=Math.PI/2; oM.position.set(0,4.22,1.36); bldg.add(oM);
+var tG = new THREE.TorusGeometry(0.23,0.04,8,20);
+var tM = new THREE.Mesh(tG, MC); tM.position.set(0,4.22,1.37); bldg.add(tM);
+
+// 6 Columns
+var colXs = [-1.9,-1.14,-0.38,0.38,1.14,1.9];
+colXs.forEach(function(x) {
+  addBox(0.30,0.14,0.30, MC, x,3.42,1.28);          // capital
+  addCyl(0.145,0.12,0.11,10, MC,LC, x,3.30,1.28);    // echinus
+  addCyl(0.11,0.13,2.72,12,  MC,LC, x,1.99,1.28);    // shaft
+  addCyl(0.145,0.16,0.11,10, MC,LC, x,0.76,1.28);    // base ring
+  addBox(0.28,0.11,0.28, MC, x,0.65,1.28);            // plinth
+});
+
+// Windows
+var winXs = [-1.66,-0.98,0.98,1.66];
+[2.28,1.42].forEach(function(wy) {
+  winXs.forEach(function(wx) {
+    var wg = new THREE.BoxGeometry(0.40,0.50,0.07);
+    var wm = new THREE.Mesh(wg, MW); wm.position.set(wx,wy,1.28); bldg.add(wm);
+    var we = new THREE.LineSegments(new THREE.EdgesGeometry(wg), LW); we.position.set(wx,wy,1.28); bldg.add(we);
+    var mh = new THREE.Mesh(new THREE.BoxGeometry(0.40,0.02,0.02),MC); mh.position.set(wx,wy,1.31); bldg.add(mh);
+    var mv = new THREE.Mesh(new THREE.BoxGeometry(0.02,0.50,0.02),MC); mv.position.set(wx,wy,1.31); bldg.add(mv);
+  });
+});
+
+// Arch entrance
+var aG = new THREE.BoxGeometry(0.62,1.05,0.07);
+var aM = new THREE.Mesh(aG, MW); aM.position.set(0,1.0,1.28); bldg.add(aM);
+var aE = new THREE.LineSegments(new THREE.EdgesGeometry(aG), LW); aE.position.set(0,1.0,1.28); bldg.add(aE);
+// Arch top
+var atG = new THREE.CylinderGeometry(0.31,0.31,0.07,14,1,false,0,Math.PI);
+var atM = new THREE.Mesh(atG, MW); atM.rotation.z=Math.PI/2; atM.rotation.y=Math.PI/2; atM.position.set(0,1.57,1.28); bldg.add(atM);
+// Keystone
+addBox(0.10,0.19,0.09, MC, 0,1.63,1.27);
+
+// ── ARCHITECTURE OVERLAY ──────────────────────────────────────────────────────
+var archOv = new THREE.Group(); archOv.visible=false; world.add(archOv);
+var aoEdge = new THREE.LineBasicMaterial({ color:0x34d399 });
+function addAO(geo, x, y, z) {
+  var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0x10b981,wireframe:true,transparent:true,opacity:0.25}));
+  m.position.set(x,y,z); archOv.add(m);
+  var el = new THREE.LineSegments(new THREE.EdgesGeometry(geo), aoEdge); el.position.set(x,y,z); archOv.add(el);
+}
+addAO(bodyGeo.clone(), 0,1.87,0);
+colXs.forEach(function(x){ addAO(new THREE.CylinderGeometry(0.11,0.13,2.72,12),x,1.99,1.28); });
+addAO(new THREE.BoxGeometry(5.04,0.12,2.67), 0,3.54,0);
+
+// ── CONDITION OVERLAY ─────────────────────────────────────────────────────────
+var condOv = new THREE.Group(); condOv.visible=false; world.add(condOv);
+var condBody = new THREE.Mesh(bodyGeo.clone(), new THREE.MeshBasicMaterial({color:0xf97316,wireframe:true,transparent:true,opacity:0.18}));
+condBody.position.set(0,1.87,0); condOv.add(condBody);
+var crackMat = new THREE.LineBasicMaterial({ color:0xff7020, transparent:true, opacity:0.95 });
+[
+  [[0.68,2.2,1.31],[0.84,2.62,1.31]],
+  [[-1.50,1.35,1.31],[-1.32,1.76,1.31]],
+  [[1.45,0.92,1.31],[1.51,1.36,1.31]],
+  [[-0.52,1.95,1.31],[-0.44,2.28,1.31]],
+  [[0.22,1.55,-1.26],[0.33,1.96,-1.26]]
+].forEach(function(pts) {
+  var geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(pts[0][0],pts[0][1],pts[0][2]),new THREE.Vector3(pts[1][0],pts[1][1],pts[1][2])]);
+  condOv.add(new THREE.Line(geo, crackMat));
+  var dot = new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6), new THREE.MeshBasicMaterial({color:0xff7020}));
+  dot.position.set(pts[0][0],pts[0][1],pts[0][2]); condOv.add(dot);
+});
+winXs.forEach(function(wx) {
+  var s = new THREE.Mesh(new THREE.BoxGeometry(0.40,0.50,0.02), new THREE.MeshBasicMaterial({color:0xf97316,transparent:true,opacity:0.28}));
+  s.position.set(wx,2.28,1.29); condOv.add(s);
+});
+
+// ── FUTURE OVERLAY ────────────────────────────────────────────────────────────
+var futOv = new THREE.Group(); futOv.visible=false; world.add(futOv);
+var futPairs = []; // [{solid, wire}] for animation
+
+function addFB(w, h, d, x, y, z) {
+  var geo = new THREE.BoxGeometry(w,h,d);
+  var sol = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:0x6b2800,emissive:0x3a1400,transparent:true,opacity:0.22}));
+  var wir = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0xea580c,wireframe:true,transparent:true,opacity:0.55}));
+  var edg = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xff7030}));
+  sol.position.set(x,y,z); wir.position.set(x,y,z); edg.position.set(x,y,z);
+  futOv.add(sol); futOv.add(wir); futOv.add(edg);
+  futPairs.push({solid:sol, wire:wir});
+}
+function addFC(rt, rb, h, x, y, z) {
+  var geo = new THREE.CylinderGeometry(rt,rb,h,8);
+  var wir = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0xea580c,wireframe:true,transparent:true,opacity:0.50}));
+  wir.position.set(x,y,z); futOv.add(wir); futPairs.push({solid:null,wire:wir});
+}
+
+[-3.4,3.4].forEach(function(x) {
+  addFB(1.8,2.7,2.5, x,1.42,0);
+  [x-0.65,x+0.65].forEach(function(cx){ addFC(0.10,0.12,2.7,cx,1.42,1.28); });
+  [2.1,1.3].forEach(function(wy) {
+    var ww = new THREE.Mesh(new THREE.BoxGeometry(0.34,0.42,0.05), new THREE.MeshBasicMaterial({color:0xea580c,transparent:true,opacity:0.30}));
+    ww.position.set(x,wy,1.28); futOv.add(ww);
+  });
+});
+addFB(4.8,0.75,2.5, 0,4.10,0);
+addFB(5.04,0.13,2.68, 0,4.525,0);
+addFB(5.04,0.42,0.13, 0,4.77,1.35);
+addFB(5.04,0.42,0.13, 0,4.77,-1.35);
+addFB(0.13,0.42,2.68, 0,4.77,0);
+
+// ── DRAG CONTROLS ─────────────────────────────────────────────────────────────
+var dragging=false, lastP={x:0,y:0}, rY=0, rX=0.12, autoRot=true;
+var cvs=renderer.domElement;
+function onDown(x,y){dragging=true;autoRot=false;lastP={x:x,y:y};document.getElementById('hint').style.opacity='0';}
+function onMove(x,y){if(!dragging)return;rY+=(x-lastP.x)*0.006;rX=Math.max(-0.28,Math.min(0.55,rX+(y-lastP.y)*0.004));lastP={x:x,y:y};}
+function onUp(){dragging=false;}
+cvs.addEventListener('mousedown', function(e){onDown(e.clientX,e.clientY);});
+cvs.addEventListener('mousemove', function(e){onMove(e.clientX,e.clientY);});
+cvs.addEventListener('mouseup',   onUp); cvs.addEventListener('mouseleave',onUp);
+cvs.addEventListener('touchstart',function(e){e.preventDefault();onDown(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+cvs.addEventListener('touchmove', function(e){e.preventDefault();onMove(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+cvs.addEventListener('touchend',  onUp);
+
+// ── ANIMATION ─────────────────────────────────────────────────────────────────
+var scanY=60, scanEl=document.getElementById('scan');
+function animate(){
+  requestAnimationFrame(animate);
+  if(autoRot) rY+=0.003;
+  world.rotation.y=rY; world.rotation.x=rX;
+  scanY+=0.7; if(scanY>window.innerHeight-98)scanY=60; scanEl.style.top=scanY+'px';
+  if(futOv.visible){
+    var t=Date.now()*0.001, p=Math.sin(t*2.2);
+    futPairs.forEach(function(pair){
+      if(pair.solid) pair.solid.material.opacity=0.13+0.07*p;
+      if(pair.wire)  pair.wire.material.opacity =0.38+0.20*p;
+    });
+  }
+  if(condOv.visible){
+    var t2=Date.now()*0.002;
+    crackMat.opacity=0.55+0.45*Math.abs(Math.sin(t2*2.5));
+  }
+  renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener('resize',function(){
+  camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+var activeK=null, futInt=null;
+var CO={h:'#d97706',a:'#10b981',c:'#f97316',f:'#06b6d4'};
+var RG={h:[217,119,6],a:[16,185,129],c:[249,115,22],f:[6,182,212]};
+var LB={h:'HISTORY MODE',a:'ARCHITECTURE MODE',c:'CONDITION MODE',f:'FUTURE OVERLAY'};
+
+window.pick=function(k){
+  if(activeK===k){closeAll();return;}
+  closeAll(); activeK=k;
+  var b=document.getElementById('btn-'+k), l=document.getElementById('lbl-'+k), rv=RG[k];
+  if(b){b.style.borderColor=CO[k]; b.style.background='rgba('+rv+',.13)';}
+  if(l) l.style.color=CO[k];
+  var p=document.getElementById('ip-'+k); if(p) p.style.transform='translateY(0)';
+  var ml=document.getElementById('mode-lbl'); if(ml){ml.textContent=LB[k];ml.style.color=CO[k];}
+  archOv.visible=(k==='a'); condOv.visible=(k==='c');
+  if(k==='f'){futOv.visible=true; startFut();}
+};
+
+function closeAll(){
+  activeK=null; if(futInt){clearInterval(futInt);futInt=null;}
+  archOv.visible=false; condOv.visible=false; futOv.visible=false;
+  var os=document.getElementById('ovs'), ob=document.getElementById('ovb');
+  if(os){os.textContent='EXISTING';os.style.color='#06b6d4';os.style.background='rgba(6,182,212,.1)';}
+  if(ob){ob.style.width='0%';ob.style.background='#06b6d4';}
+  var ml=document.getElementById('mode-lbl'); if(ml) ml.textContent='';
+  ['h','a','c','f'].forEach(function(k){
+    var b=document.getElementById('btn-'+k), l=document.getElementById('lbl-'+k);
+    if(b){b.style.borderColor='#16253a';b.style.background='transparent';}
+    if(l) l.style.color='#2e4d6a';
+  });
+  document.querySelectorAll('.ip').forEach(function(p){p.style.transform='translateY(200%)';});
+}
+
+function startFut(){
+  var on=false;
+  function tog(){
+    on=!on;
+    var os=document.getElementById('ovs'), ob=document.getElementById('ovb');
+    if(os){os.textContent=on?'PROPOSED':'EXISTING';os.style.color=on?'#ea580c':'#06b6d4';os.style.background=on?'rgba(234,88,12,.1)':'rgba(6,182,212,.1)';}
+    if(ob){ob.style.width=on?'100%':'0%';ob.style.background=on?'#ea580c':'#06b6d4';}
+  }
+  tog(); futInt=setInterval(tog,2600);
+}
+
+window.switchBld=function(n){
+  var BD={herrera:{l:'HERRERA HALL ◆ c.1946',c:'10.7202°N 122.5621°E'},dolce:{l:'DOLCE GARCIA HALL ◆ c.1950',c:'10.7205°N 122.5619°E'}};
+  document.getElementById('bld-lbl').textContent=BD[n].l;
+  document.getElementById('gps-txt').textContent=BD[n].c;
+  ['herrera','dolce'].forEach(function(x){
+    var b=document.getElementById('bld-'+x);
+    if(x===n){b.style.background='#0f2744';b.style.color='#60a5fa';b.style.borderColor='#1d4ed8';}
+    else{b.style.background='transparent';b.style.color='#475569';b.style.borderColor='#334155';}
+  });
+  closeAll();
+};
+</script>
+</body>
+</html>
