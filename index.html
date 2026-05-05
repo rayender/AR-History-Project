@@ -2,410 +2,712 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AR Heritage Scanner — University of San Agustin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Heritage AR Demo — University of San Agustin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#03090f;font-family:'Courier New',Courier,monospace;touch-action:none}
-canvas{display:block;position:fixed;top:0;left:0;z-index:1}
-.arc{position:fixed;width:36px;height:36px;z-index:10;pointer-events:none}
-.arc-tl{top:58px;left:14px;border-top:2px solid #22c55e;border-left:2px solid #22c55e}
-.arc-tr{top:58px;right:14px;border-top:2px solid #22c55e;border-right:2px solid #22c55e}
-.arc-bl{bottom:98px;left:14px;border-bottom:2px solid #22c55e;border-left:2px solid #22c55e}
-.arc-br{bottom:98px;right:14px;border-bottom:2px solid #22c55e;border-right:2px solid #22c55e}
-#scan{position:fixed;left:12px;right:12px;height:1px;background:rgba(34,197,94,0.6);z-index:9;pointer-events:none;box-shadow:0 0 8px rgba(34,197,94,0.35)}
-#hud-top{position:fixed;top:0;left:0;right:0;padding:12px 20px 30px;background:linear-gradient(to bottom,rgba(3,9,15,0.9),transparent);display:flex;justify-content:space-between;align-items:center;z-index:10;pointer-events:none}
-#xhair{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;z-index:9;opacity:0.25;pointer-events:none}
-#bld-select{position:fixed;top:56px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:20}
-.bld-btn{padding:5px 14px;font-size:10px;font-family:'Courier New',monospace;letter-spacing:.1em;border-radius:4px;cursor:pointer;transition:all .2s}
-#bld-tag{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:rgba(3,9,15,0.9);border:.5px solid #22c55e;padding:4px 18px;border-radius:3px;white-space:nowrap;font-size:10px;color:#22c55e;letter-spacing:.08em;z-index:10;pointer-events:none}
-#gps,#hint{position:fixed;bottom:124px;font-size:9px;color:#1e3a54;letter-spacing:.05em;z-index:10;pointer-events:none}
-#gps{left:18px}#hint{right:18px;transition:opacity 1.2s}
-#mode-lbl{position:fixed;top:98px;right:16px;font-size:8.5px;letter-spacing:.1em;z-index:10;pointer-events:none;text-align:right;line-height:1.6;color:#2e4d6a}
-.ip{position:fixed;bottom:88px;left:0;right:0;background:rgba(3,6,14,0.97);padding:15px 22px 13px;transform:translateY(200%);transition:transform .32s cubic-bezier(.4,0,.2,1);z-index:20;max-height:185px;overflow:hidden}
-#btn-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(4,9,20,0.97);border-top:.5px solid #0c1d34;padding:10px 16px 22px;display:flex;justify-content:space-around;align-items:center;z-index:20}
-.ab{background:transparent;border:.5px solid #16253a;border-radius:8px;padding:8px 5px 7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;width:70px;transition:all .2s}
-.al{font-size:7.5px;font-family:'Courier New',monospace;letter-spacing:.1em;color:#2e4d6a;transition:color .2s}
-@keyframes rp{0%,100%{opacity:1}50%{opacity:.1}}
-.rec{animation:rp 1.6s ease-in-out infinite}
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --white:#FFFFFF;--ivory:#FDFAF5;--beige:#F0E8D8;--beige2:#E2D4BE;--beige3:#D0C4AC;
+  --maroon:#8C1C2C;--maroon-d:#6A1220;--text:#1A0C06;--text2:#5C3C2A;--text3:#8A6A54;--blue:#1E44A0;
+}
+html{scroll-behavior:auto;}
+body{background:var(--ivory);font-family:'DM Sans',sans-serif;color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;}
+#scroll-body{position:relative;height:520vh;z-index:1;pointer-events:none;}
+#gpb{position:fixed;top:0;left:0;height:3px;background:var(--maroon);z-index:90;width:0%;box-shadow:0 0 8px rgba(140,28,44,.5);}
+/* HEADER */
+#hdr{position:fixed;top:0;left:0;right:0;height:62px;background:rgba(253,250,245,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1.5px solid var(--beige2);display:flex;align-items:center;justify-content:space-between;padding:0 1.3rem;z-index:60;box-shadow:0 2px 14px rgba(26,12,6,.07);}
+.brand{display:flex;align-items:center;gap:.75rem;flex-shrink:0;}
+.logo{width:38px;height:38px;background:var(--maroon);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo svg{width:22px;height:22px;}
+.brand-name{font-size:.72rem;font-weight:600;color:var(--text);letter-spacing:.03em;white-space:nowrap;line-height:1.2;}
+.brand-sub{font-size:.55rem;color:var(--maroon);letter-spacing:.14em;text-transform:uppercase;margin-top:.1rem;}
+.bldg-tabs{display:flex;gap:.25rem;}
+.bldg-tab{cursor:pointer;background:none;border:1.5px solid var(--beige2);padding:.38rem .85rem;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:500;color:var(--text2);letter-spacing:.03em;transition:all .25s;white-space:nowrap;}
+.bldg-tab:hover{border-color:var(--maroon);color:var(--maroon);}
+.bldg-tab.active{background:var(--maroon);border-color:var(--maroon);color:white;font-weight:600;}
+/* AR FRAME */
+.ar-frame{position:fixed;inset:68px 14px 124px 14px;pointer-events:none;z-index:4;}
+.arc{position:absolute;width:28px;height:28px;border-color:rgba(140,28,44,.5);border-style:solid;}
+.arc.tl{top:0;left:0;border-width:2px 0 0 2px;}.arc.tr{top:0;right:0;border-width:2px 2px 0 0;}
+.arc.bl{bottom:0;left:0;border-width:0 0 2px 2px;}.arc.br{bottom:0;right:0;border-width:0 2px 2px 0;}
+/* MODE BADGE */
+#mode-badge{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:var(--maroon);color:white;font-size:.56rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;padding:.3rem 1rem;z-index:20;pointer-events:none;white-space:nowrap;}
+/* PHASE PANELS */
+.ph-panel{position:fixed;left:clamp(1rem,3vw,2rem);top:50%;transform:translateY(-50%) translateX(calc(-100% - 2rem));width:min(300px,88vw);background:rgba(253,250,245,.97);border-left:3px solid var(--maroon);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:20;opacity:0;transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .55s ease;pointer-events:none;}
+.ph-panel.vis{transform:translateY(-50%) translateX(0);opacity:1;}
+.ph-head{background:var(--maroon);color:white;padding:1rem 1.1rem .9rem;}
+.ph-num{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;opacity:.68;margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem;}
+.ph-num::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.25);}
+.ph-icon{font-size:1rem;margin-bottom:.3rem;display:block;}
+.ph-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;line-height:1.2;}
+.ph-sub{font-size:.62rem;opacity:.65;margin-top:.2rem;font-style:italic;}
+.ph-body{padding:1rem 1.1rem;}
+.ph-items{list-style:none;display:flex;flex-direction:column;gap:.55rem;}
+.ph-items li{font-size:.76rem;color:var(--text);line-height:1.6;padding-left:.9rem;position:relative;}
+.ph-items li::before{content:'';position:absolute;left:0;top:.58em;width:5px;height:5px;background:var(--maroon);border-radius:50%;}
+.ph-divider{height:1px;background:var(--beige2);margin:.75rem 0;}
+.ph-values{display:flex;gap:.35rem;flex-wrap:wrap;}
+.value-chip{background:var(--maroon);color:white;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .6rem;font-style:italic;font-family:'Playfair Display',serif;}
+.ph-extra{font-size:.7rem;color:var(--text2);line-height:1.7;font-style:italic;}
+.ph-stats{display:flex;gap:.8rem;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--beige2);}
+.ph-stat{flex:1;}
+.st-val{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--maroon);line-height:1;}
+.st-key{font-size:.55rem;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-top:.2rem;}
+/* PROGRESS SIDEBAR */
+#prog-sidebar{position:fixed;right:clamp(.8rem,2vw,1.5rem);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:0;z-index:20;}
+.prog-wrap{display:flex;flex-direction:column;align-items:center;}
+.prog-lbl{font-size:.5rem;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);margin-bottom:.25rem;opacity:0;transition:opacity .4s,color .4s;white-space:nowrap;max-height:0;overflow:hidden;}
+.prog-dot{width:7px;height:7px;border-radius:50%;background:var(--beige3);border:1px solid transparent;transition:background .4s,transform .4s,border-color .4s;}
+.prog-line{width:1px;height:24px;background:var(--beige3);opacity:.5;}
+.prog-wrap.active .prog-dot{background:var(--maroon);transform:scale(1.6);border-color:rgba(140,28,44,.3);box-shadow:0 0 10px rgba(140,28,44,.45);}
+.prog-wrap.active .prog-lbl{opacity:1;color:var(--maroon);max-height:80px;}
+.prog-wrap.done .prog-dot{background:var(--maroon);opacity:.4;transform:scale(1);}
+/* LABELS / HINTS */
+#bldg-label{position:fixed;bottom:128px;left:50%;transform:translateX(-50%);background:rgba(140,28,44,.82);color:rgba(255,255,255,.95);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .9rem;z-index:20;pointer-events:none;white-space:nowrap;font-weight:500;}
+#scroll-hint{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;z-index:20;transition:opacity .8s;pointer-events:none;}
+#scroll-hint span{font-size:.6rem;color:var(--text3);letter-spacing:.18em;text-transform:uppercase;}
+.hint-bar{width:1px;height:40px;background:linear-gradient(to bottom,var(--maroon),transparent);animation:hint-p 2.2s ease-in-out infinite;transform-origin:top;}
+@keyframes hint-p{0%,100%{transform:scaleY(1);opacity:.8;}50%{transform:scaleY(.35);opacity:.2;}}
+#done-banner{position:fixed;bottom:128px;left:50%;transform:translateX(-50%) translateY(120%);background:var(--maroon);color:white;font-family:'Playfair Display',serif;font-size:clamp(.7rem,1.5vw,.88rem);font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.75rem 2rem;z-index:20;transition:transform .6s cubic-bezier(.16,1,.3,1);pointer-events:none;white-space:nowrap;}
+#done-banner.vis{transform:translateX(-50%) translateY(0);}
+/* CONDITION MARKERS */
+.cm{position:fixed;width:12px;height:12px;border-radius:50%;background:#D43020;border:2px solid white;box-shadow:0 0 10px rgba(212,48,32,.7);z-index:15;pointer-events:none;opacity:0;transition:opacity .4s;animation:cm-p 1.8s ease-in-out infinite;}
+@keyframes cm-p{0%,100%{transform:scale(1);}50%{transform:scale(1.5);box-shadow:0 0 18px rgba(212,48,32,.9);}}
+.cm.show{opacity:1;}
+.cm-lbl{position:fixed;background:rgba(212,48,32,.9);color:white;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;padding:.12rem .4rem;pointer-events:none;z-index:15;white-space:nowrap;font-weight:500;opacity:0;transition:opacity .4s;}
+.cm-lbl.show{opacity:1;}
+/* ARCH ANNOTATIONS */
+.aa{position:fixed;pointer-events:none;z-index:15;opacity:0;transition:opacity .4s;}
+.aa.show{opacity:1;}
+.aa-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);border:2px solid white;}
+.aa-line{width:26px;height:1.5px;background:var(--blue);margin-left:7px;margin-top:-4px;}
+.aa-txt{font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);background:rgba(253,250,245,.94);border:1px solid rgba(30,68,160,.22);padding:.14rem .42rem;white-space:nowrap;font-weight:500;margin-top:2px;}
+
+/* ===== BEFORE / AFTER SPLIT OVERLAY ===== */
+#split-overlay{
+  position:fixed;
+  inset:62px 0 112px 0;
+  z-index:18;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .5s;
+  overflow:hidden;
+}
+#split-overlay.show{opacity:1;pointer-events:all;}
+
+/* Left label */
+#sl-lbl-l{
+  position:absolute;
+  top:14px; left:16px;
+  background:rgba(253,250,245,.94);
+  border:1.5px solid var(--beige2);
+  font-size:.58rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--text2); padding:.28rem .9rem;
+  pointer-events:none; z-index:2; white-space:nowrap;
+}
+/* Right label */
+#sl-lbl-r{
+  position:absolute;
+  top:14px; right:16px;
+  background:var(--maroon);
+  font-size:.58rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+  color:white; padding:.28rem .9rem;
+  pointer-events:none; z-index:2; white-space:nowrap;
+}
+/* Drag hint that fades after first drag */
+#sl-drag-hint{
+  position:absolute;
+  bottom:18px; left:50%; transform:translateX(-50%);
+  font-size:.56rem; color:white; letter-spacing:.14em; text-transform:uppercase;
+  background:rgba(26,12,6,.55); padding:.22rem .75rem;
+  pointer-events:none; z-index:2; white-space:nowrap;
+  transition:opacity .8s;
+}
+/* Vertical divider */
+#sl-div{
+  position:absolute;
+  top:0; bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:44px;       /* wide hit target */
+  cursor:ew-resize;
+  z-index:3;
+  display:flex; align-items:center; justify-content:center;
+}
+/* The visible line */
+#sl-div::before{
+  content:'';
+  position:absolute;
+  top:0; bottom:0;
+  left:50%; transform:translateX(-50%);
+  width:3px;
+  background:white;
+  box-shadow:0 0 16px rgba(0,0,0,.35), 0 0 4px rgba(0,0,0,.2);
+}
+/* Handle circle */
+#sl-handle{
+  width:48px; height:48px;
+  background:white;
+  border-radius:50%;
+  box-shadow:0 3px 18px rgba(0,0,0,.22), 0 1px 6px rgba(0,0,0,.14);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  position:relative; z-index:1;
+  cursor:ew-resize;
+  transition:transform .15s, box-shadow .15s;
+}
+#sl-handle:active{transform:scale(1.08);box-shadow:0 4px 22px rgba(0,0,0,.28);}
+#sl-handle svg{display:block;}
+/* Thin maroon rule at top and bottom of the divider line */
+#sl-div::after{
+  content:'';
+  position:absolute;
+  top:0; bottom:0;
+  left:50%; transform:translateX(-50%);
+  width:3px;
+  background:linear-gradient(to bottom,var(--maroon) 0%,transparent 6%,transparent 94%,var(--maroon) 100%);
+  pointer-events:none;
+}
+
+/* NAV */
+#nav{position:fixed;bottom:36px;left:0;right:0;height:76px;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);border-top:1.5px solid var(--beige2);display:flex;align-items:center;justify-content:space-around;z-index:60;box-shadow:0 -2px 14px rgba(26,12,6,.06);}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.18rem;background:none;border:none;cursor:pointer;padding:.5rem 0;color:var(--text3);transition:color .2s;position:relative;pointer-events:all;}
+.nbtn::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:2.5px;background:var(--maroon);transition:width .3s;}
+.nbtn.active{color:var(--maroon);}
+.nbtn.active::before{width:32px;}
+.n-icon{font-size:1.22rem;}
+.n-lbl{font-size:.58rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;}
+/* FOOTER */
+#ftr{position:fixed;bottom:0;left:0;right:0;height:36px;background:var(--maroon-d);color:rgba(255,255,255,.65);display:flex;align-items:center;justify-content:center;font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;z-index:60;gap:.5rem;}
+#ftr strong{color:rgba(255,255,255,.95);font-weight:600;}
+#ftr .sep{opacity:.3;}
+@media(max-width:520px){.brand-name{display:none;}.bldg-tab{padding:.35rem .55rem;font-size:.62rem;}#prog-sidebar{display:none;}.ph-panel{width:calc(100vw - 2rem);}.n-lbl{font-size:.54rem;}}
 </style>
 </head>
 <body>
+
 <canvas id="c"></canvas>
-<div class="arc arc-tl"></div><div class="arc arc-tr"></div>
-<div class="arc arc-bl"></div><div class="arc arc-br"></div>
-<div id="scan"></div>
-<div id="hud-top">
-  <div style="display:flex;align-items:center;gap:6px">
-    <div class="rec" style="width:6px;height:6px;background:#22c55e;border-radius:50%;flex-shrink:0"></div>
-    <span style="color:#2a5070;font-size:10px;letter-spacing:.1em">AR·LIVE</span>
-  </div>
-  <span style="color:#4a7898;font-size:11px;letter-spacing:.15em">HERITAGE SCAN</span>
-  <span style="color:#2a5070;font-size:10px">GPS◉</span>
-</div>
-<div id="bld-select">
-  <button id="bld-herrera" class="bld-btn" onclick="switchBld('herrera')" style="background:#0f2744;color:#60a5fa;border:.5px solid #1d4ed8">HERRERA HALL</button>
-  <button id="bld-dolce" class="bld-btn" onclick="switchBld('dolce')" style="background:transparent;color:#475569;border:.5px solid #334155">DOLCE GARCIA HALL</button>
-</div>
-<svg id="xhair" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="27" cy="27" r="19" stroke="#22c55e" stroke-width="0.8"/>
-  <line x1="4" y1="27" x2="17" y2="27" stroke="#22c55e" stroke-width="0.8"/>
-  <line x1="37" y1="27" x2="50" y2="27" stroke="#22c55e" stroke-width="0.8"/>
-  <line x1="27" y1="4" x2="27" y2="17" stroke="#22c55e" stroke-width="0.8"/>
-  <line x1="27" y1="37" x2="27" y2="50" stroke="#22c55e" stroke-width="0.8"/>
-  <circle cx="27" cy="27" r="2" fill="#22c55e" opacity="0.5"/>
-</svg>
-<div id="bld-tag"><span id="bld-lbl">HERRERA HALL ◆ c.1946</span></div>
-<div id="gps"><span id="gps-txt">10.7202°N&nbsp;122.5621°E</span></div>
-<div id="hint">⟳ DRAG TO ROTATE</div>
-<div id="mode-lbl"></div>
+<div id="scroll-body"></div>
+<div id="gpb"></div>
 
-<div id="ip-h" class="ip" style="border-top:1.5px solid #d97706">
-  <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><div style="width:7px;height:7px;background:#d97706;border-radius:1px;flex-shrink:0"></div><span style="color:#d97706;font-size:9.5px;letter-spacing:.12em">HISTORICAL VALUE</span></div>
-  <div style="font-size:11px;line-height:1.7;color:#b0bccf">
-    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#d97706;flex-shrink:0">◆</span><span>Built <b style="color:#fbbf24">c.1946–1948</b> during post-war reconstruction</span></div>
-    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#d97706;flex-shrink:0">◆</span><span>Named after <b style="color:#fbbf24">Fray Diego de Herrera, OSA</b></span></div>
-    <div style="display:flex;gap:6px"><span style="color:#d97706;flex-shrink:0">◆</span><span>Symbol of resilience &amp; university rebuilding</span></div>
+<header id="hdr">
+  <div class="brand">
+    <div class="logo">
+      <svg viewBox="0 0 22 22" fill="none">
+        <rect x="1" y="1" width="20" height="20" stroke="rgba(255,255,255,0.35)" stroke-width="1"/>
+        <path d="M11 4L4 8v6l7 4 7-4V8L11 4z" stroke="white" stroke-width="1.4" fill="rgba(255,255,255,0.12)"/>
+        <path d="M11 4v8M4 8l7 4 7-4" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">University of San Agustin</div>
+      <div class="brand-sub">Heritage AR Demo</div>
+    </div>
   </div>
-  <div style="margin-top:8px;padding-top:7px;border-top:.5px solid #182a40"><span style="font-size:8.5px;color:#d97706;letter-spacing:.06em">UNITAS · CARITAS · VERITAS</span></div>
+  <div class="bldg-tabs">
+    <button class="bldg-tab active" data-b="herrera">Herrera Hall</button>
+    <button class="bldg-tab" data-b="dolce">Dolce Garcia Hall</button>
+  </div>
+</header>
+
+<div class="ar-frame">
+  <div class="arc tl"></div><div class="arc tr"></div>
+  <div class="arc bl"></div><div class="arc br"></div>
 </div>
-<div id="ip-a" class="ip" style="border-top:1.5px solid #10b981">
-  <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><div style="width:7px;height:7px;background:#10b981;border-radius:1px;flex-shrink:0"></div><span style="color:#10b981;font-size:9.5px;letter-spacing:.12em">ARCHITECTURAL VALUE</span></div>
-  <div style="font-size:11px;line-height:1.7;color:#b0bccf">
-    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">◆</span><span><b style="color:#34d399">Neoclassical</b> symmetry &amp; proportion — 6 Doric columns</span></div>
-    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">◆</span><span>Durable <b style="color:#34d399">masonry &amp; concrete</b> construction</span></div>
-    <div style="display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">◆</span><span>Strong façade: <b style="color:#34d399">columns · pediment · entablature</b></span></div>
+
+<div id="mode-badge">Scroll to Begin</div>
+
+<!-- Phase panels -->
+<div class="ph-panel" id="pp0">
+  <div class="ph-head">
+    <div class="ph-num">Phase 01 &mdash; Historical Documentation</div>
+    <span class="ph-icon">&#127963;</span>
+    <div class="ph-title">Historical Value</div>
+    <div class="ph-sub" id="pp0-sub">Herrera Hall &middot; c.&nbsp;1946&ndash;1948</div>
   </div>
-  <div style="margin-top:8px;padding-top:7px;border-top:.5px solid #182a40"><span style="font-size:8.5px;color:#10b981;letter-spacing:.06em">INSTITUTIONAL NEOCLASSICAL — ILOILO, PH</span></div>
-</div>
-<div id="ip-c" class="ip" style="border-top:1.5px solid #f97316">
-  <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><div style="width:7px;height:7px;background:#f97316;border-radius:1px;flex-shrink:0"></div><span style="color:#f97316;font-size:9.5px;letter-spacing:.12em">CONDITION MONITORING</span></div>
-  <div style="font-size:11px;line-height:1.7;color:#b0bccf">
-    <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:6px;align-items:center"><span style="color:#f97316;font-size:10px">▲</span>Structural cracks</span><span style="font-size:8px;color:#f97316;font-family:'Courier New',monospace;background:rgba(249,115,22,.1);padding:2px 6px;border-radius:2px">MONITOR</span></div>
-    <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:6px;align-items:center"><span style="color:#f97316;font-size:10px">▲</span>Moisture damage</span><span style="font-size:8px;color:#f97316;font-family:'Courier New',monospace;background:rgba(249,115,22,.1);padding:2px 6px;border-radius:2px">MONITOR</span></div>
-    <div style="display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:6px;align-items:center"><span style="color:#f97316;font-size:10px">▲</span>Material decay</span><span style="font-size:8px;color:#f97316;font-family:'Courier New',monospace;background:rgba(249,115,22,.1);padding:2px 6px;border-radius:2px">MONITOR</span></div>
-  </div>
-  <div style="margin-top:8px;padding-top:7px;border-top:.5px solid #182a40"><span style="font-size:8.5px;color:#475569;letter-spacing:.06em">3D CRACK MARKERS VISIBLE ON MODEL</span></div>
-</div>
-<div id="ip-f" class="ip" style="border-top:1.5px solid #06b6d4">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
-    <div style="display:flex;align-items:center;gap:7px"><div style="width:7px;height:7px;background:#06b6d4;border-radius:1px"></div><span style="color:#06b6d4;font-size:9.5px;letter-spacing:.12em">FUTURE OVERLAY</span></div>
-    <span id="ovs" style="font-size:8px;font-family:'Courier New',monospace;color:#06b6d4;background:rgba(6,182,212,.1);padding:2px 7px;border-radius:2px;transition:all .4s">EXISTING</span>
-  </div>
-  <div style="font-size:11px;line-height:1.7;color:#b0bccf">
-    <div style="margin-bottom:5px;display:flex;gap:6px"><span style="color:#06b6d4;flex-shrink:0">◆</span><span><b style="color:#67e8f9">Adaptive Reuse</b> — evolving academic functions</span></div>
-    <div style="display:flex;gap:6px"><span style="color:#06b6d4;flex-shrink:0">◆</span><span>Proposed 3D extensions in <b style="color:#ea580c">orange wireframe</b></span></div>
-  </div>
-  <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
-    <span style="font-size:8px;color:#2e4d6a;min-width:48px">EXISTING</span>
-    <div style="flex:1;height:3px;background:#0c1e35;border-radius:1.5px;overflow:hidden"><div id="ovb" style="height:3px;width:0%;background:#06b6d4;border-radius:1.5px;transition:width 2.4s ease,background 2.4s"></div></div>
-    <span style="font-size:8px;color:#ea580c;min-width:52px;text-align:right">PROPOSED</span>
+  <div class="ph-body">
+    <ul class="ph-items" id="pp0-items"></ul>
+    <div class="ph-divider"></div>
+    <div style="font-size:.58rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.45rem;font-weight:500;">Augustinian Values</div>
+    <div class="ph-values">
+      <div class="value-chip">Unitas</div>
+      <div class="value-chip">Caritas</div>
+      <div class="value-chip">Veritas</div>
+    </div>
+    <div class="ph-stats">
+      <div class="ph-stat"><div class="st-val" id="pp0-y"></div><div class="st-key">Year built</div></div>
+      <div class="ph-stat"><div class="st-val">OSA</div><div class="st-key">Order</div></div>
+      <div class="ph-stat"><div class="st-val">Heritage</div><div class="st-key">Category</div></div>
+    </div>
   </div>
 </div>
 
-<div id="btn-bar">
-  <button id="btn-h" class="ab" onclick="pick('h')">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 13.5V5.8L8 2.5l6 3.3v7.7H2z" stroke="#d97706" stroke-width="1.1" fill="none"/><rect x="5" y="8.5" width="2" height="5" fill="#d97706"/><rect x="9" y="8.5" width="2" height="5" fill="#d97706"/><rect x="5" y="5.2" width="6" height="2" fill="#d97706"/></svg>
-    <span id="lbl-h" class="al">HISTORY</span>
-  </button>
-  <button id="btn-a" class="ab" onclick="pick('a')">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="8,1.5 14.5,6.5 1.5,6.5" stroke="#10b981" stroke-width="1.1" fill="none"/><rect x="1.5" y="6.5" width="13" height="1" fill="#10b981"/><rect x="3" y="7.5" width="1.5" height="6.5" fill="#10b981"/><rect x="7.25" y="7.5" width="1.5" height="6.5" fill="#10b981"/><rect x="11.5" y="7.5" width="1.5" height="6.5" fill="#10b981"/><rect x="1.5" y="14" width="13" height="1" fill="#10b981"/></svg>
-    <span id="lbl-a" class="al">ARCHITECT</span>
-  </button>
-  <button id="btn-c" class="ab" onclick="pick('c')">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="8,1.5 15.5,14.5 .5,14.5" stroke="#f97316" stroke-width="1.1" fill="none"/><line x1="8" y1="6" x2="8" y2="10.5" stroke="#f97316" stroke-width="1.3"/><circle cx="8" cy="12.5" r=".9" fill="#f97316"/></svg>
-    <span id="lbl-c" class="al">CONDITION</span>
-  </button>
-  <button id="btn-f" class="ab" onclick="pick('f')">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="8" width="14" height="6.5" stroke="#06b6d4" stroke-width="1" fill="none"/><rect x="3" y="3.5" width="10" height="4.5" stroke="#06b6d4" stroke-width=".8" stroke-dasharray="2,1.2" fill="none"/><line x1="8" y1="1.5" x2="8" y2="3.5" stroke="#06b6d4" stroke-width=".9"/><line x1="6.5" y1="2.5" x2="9.5" y2="2.5" stroke="#06b6d4" stroke-width=".9"/></svg>
-    <span id="lbl-f" class="al">FUTURE</span>
-  </button>
+<div class="ph-panel" id="pp1">
+  <div class="ph-head">
+    <div class="ph-num">Phase 02 &mdash; Architectural Survey</div>
+    <span class="ph-icon">&#128202;</span>
+    <div class="ph-title">Architectural Value</div>
+    <div class="ph-sub">Neoclassical Institutional Style</div>
+  </div>
+  <div class="ph-body">
+    <ul class="ph-items" id="pp1-items"></ul>
+    <div class="ph-divider"></div>
+    <div class="ph-extra" id="pp1-extra"></div>
+  </div>
 </div>
+
+<div class="ph-panel" id="pp2">
+  <div class="ph-head">
+    <div class="ph-num">Phase 03 &mdash; Condition Assessment</div>
+    <span class="ph-icon">&#9888;</span>
+    <div class="ph-title">Condition Monitoring</div>
+    <div class="ph-sub">Structural &amp; Material Assessment</div>
+  </div>
+  <div class="ph-body">
+    <ul class="ph-items" id="pp2-items"></ul>
+    <div class="ph-divider"></div>
+    <div class="ph-extra" id="pp2-extra"></div>
+    <div class="ph-stats" style="margin-top:.75rem">
+      <div class="ph-stat"><div class="st-val">3</div><div class="st-key">Issues tracked</div></div>
+      <div class="ph-stat"><div class="st-val">Active</div><div class="st-key">Monitoring</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="ph-panel" id="pp3">
+  <div class="ph-head">
+    <div class="ph-num">Phase 04 &mdash; Conservation Design</div>
+    <span class="ph-icon">&#128300;</span>
+    <div class="ph-title" id="pp3-title">Future Overlay</div>
+    <div class="ph-sub">Drag the divider to compare</div>
+  </div>
+  <div class="ph-body">
+    <ul class="ph-items" id="pp3-items"></ul>
+    <div class="ph-divider"></div>
+    <div class="ph-extra" id="pp3-extra"></div>
+    <div class="ph-stats" style="margin-top:.75rem">
+      <div class="ph-stat"><div class="st-val">LEED</div><div class="st-key">Target cert.</div></div>
+      <div class="ph-stat"><div class="st-val">Adaptive</div><div class="st-key">Reuse type</div></div>
+    </div>
+  </div>
+</div>
+
+<nav id="prog-sidebar">
+  <div class="prog-wrap"><div class="prog-lbl">History</div><div class="prog-dot"></div></div>
+  <div class="prog-line"></div>
+  <div class="prog-wrap"><div class="prog-lbl">Arch.</div><div class="prog-dot"></div></div>
+  <div class="prog-line"></div>
+  <div class="prog-wrap"><div class="prog-lbl">Condition</div><div class="prog-dot"></div></div>
+  <div class="prog-line"></div>
+  <div class="prog-wrap"><div class="prog-lbl">Future</div><div class="prog-dot"></div></div>
+</nav>
+
+<div id="bldg-label">Herrera Hall &nbsp;&middot;&nbsp; c.&nbsp;1946&ndash;1948</div>
+<div id="scroll-hint"><span>Scroll to begin</span><div class="hint-bar"></div></div>
+<div id="done-banner">&#10022; Conservation Design Complete &mdash; Herrera Hall</div>
+
+<!-- Condition markers -->
+<div class="cm" id="cm0" style="left:36%;top:32%;"></div>
+<div class="cm-lbl" id="cml0" style="left:37%;top:36%;">Structural crack</div>
+<div class="cm" id="cm1" style="left:56%;top:44%;"></div>
+<div class="cm-lbl" id="cml1" style="left:57%;top:48%;">Moisture damage</div>
+<div class="cm" id="cm2" style="left:44%;top:62%;"></div>
+<div class="cm-lbl" id="cml2" style="left:45%;top:66%;">Material decay</div>
+
+<!-- Arch annotations -->
+<div class="aa" id="aa0" style="left:20%;top:38%"><div class="aa-dot"></div><div class="aa-line"></div><div class="aa-txt">Neoclassical pediment</div></div>
+<div class="aa" id="aa1" style="left:64%;top:50%"><div class="aa-dot"></div><div class="aa-line"></div><div class="aa-txt">Colonnade rhythm</div></div>
+<div class="aa" id="aa2" style="left:38%;top:70%"><div class="aa-dot"></div><div class="aa-line"></div><div class="aa-txt">Masonry plinth</div></div>
+
+<!-- Before/After split overlay -->
+<div id="split-overlay">
+  <div id="sl-lbl-l">&#9632; Existing</div>
+  <div id="sl-lbl-r">Future Overlay &#9632;</div>
+  <div id="sl-drag-hint">&#8592; Drag to compare &#8594;</div>
+  <div id="sl-div">
+    <div id="sl-handle">
+      <svg width="24" height="20" viewBox="0 0 24 20" fill="none">
+        <path d="M9 10L5 6M9 10L5 14" stroke="#8C1C2C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M15 10L19 6M15 10L19 14" stroke="#8C1C2C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="12" y1="2" x2="12" y2="18" stroke="#8C1C2C" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<nav id="nav">
+  <button class="nbtn" data-m="history" data-t="0.22"><span class="n-icon">&#127963;</span><span class="n-lbl">History</span></button>
+  <button class="nbtn" data-m="architecture" data-t="0.44"><span class="n-icon">&#128202;</span><span class="n-lbl">Architecture</span></button>
+  <button class="nbtn" data-m="condition" data-t="0.64"><span class="n-icon">&#9888;</span><span class="n-lbl">Condition</span></button>
+  <button class="nbtn" data-m="future" data-t="0.82"><span class="n-icon">&#128300;</span><span class="n-lbl">Future</span></button>
+</nav>
+
+<footer id="ftr">
+  <strong>Arch. Adonis Canonicato Sr.</strong>
+  <span class="sep">/</span>
+  University of San Agustin
+  <span class="sep">/</span>
+  Heritage Conservation AR Demo
+</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ── RENDERER ──────────────────────────────────────────────────────────────────
-var renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
+// ── DATA ─────────────────────────────────────────────
+const DATA={
+  herrera:{
+    name:'Herrera Hall',year:'c.\u20091946\u20131948',
+    history:['Built during <strong>post-war reconstruction (c.\u20091946\u20131948)</strong>','Symbol of resilience and rebuilding of the University','Named after <strong>Fray Diego de Herrera, OSA</strong>','Core academic building of University of San Agustin'],
+    architecture:{items:['<strong>Neoclassical symmetry</strong> and proportion throughout the facade','Durable masonry and concrete construction','Strong facade: columns, pediment, cornice rhythm','Landmark within the campus axial composition'],extra:'The colonnade, cornice, and pediment express a classical institutional character consistent with Augustinian academic tradition.'},
+    condition:{items:['Track <strong>structural cracks</strong> in load-bearing members','Monitor <strong>moisture damage</strong> and water infiltration at joints','Assess <strong>material decay</strong> in facade masonry and trim'],extra:'Systematic monitoring required to guide conservation priorities and preserve the heritage fabric of this post-war landmark.'},
+    future:{title:'Future Overlay',items:['Proposed adaptive reuse and heritage conservation design','Retention of character-defining facade elements','Contemporary interior upgrades with minimal intrusion','New academic spaces integrated sensitively within existing envelope'],extra:'Drag the divider left and right to compare the existing building against the proposed conservation overlay.'}
+  },
+  dolce:{
+    name:'Dolce Garcia Hall',year:'c.\u2009late\u00a01940s\u20131950s',
+    history:['Built during <strong>post-war expansion (late 1940s\u20131950s)</strong>','Represents continued growth of Augustinian education','Named after <strong>Fray Jose Dolce Garcia, OSA</strong>','Key academic facility of University of San Agustin'],
+    architecture:{items:['Institutional <strong>neoclassical influence</strong> with simplified detailing','Harmonizes with Herrera Hall in scale and proportion','Functional academic layout with repetitive structural bays','Reinforces visual continuity of the heritage core'],extra:'The simplified detailing of Dolce Garcia Hall complements Herrera Hall, forming a coherent heritage streetscape.'},
+    condition:{items:['Monitor <strong>structural integrity</strong> of key load-bearing elements','Inspect <strong>moisture intrusion</strong> at wall junctions and openings','Assess <strong>surface deterioration</strong> of masonry facade'],extra:'A condition survey aligned with the broader campus heritage conservation programme is recommended.'},
+    future:{title:'Future Overlay \u2014 Adaptive Reuse',items:['<strong>Adaptive reuse</strong> supporting evolving academic and administrative functions','Restoration of heritage facade elements','New interior organisation for contemporary academic needs','Landscaping improvements to reinforce campus heritage setting'],extra:'Drag the divider left and right to compare the existing building against the proposed adaptive reuse overlay.'}
+  }
+};
 
-var scene = new THREE.Scene();
-scene.background = new THREE.Color(0x03090f);
-scene.fog = new THREE.Fog(0x03090f, 22, 40);
+function populate(b){
+  const d=DATA[b];
+  document.getElementById('pp0-sub').textContent=d.name+' \u00B7 '+d.year;
+  document.getElementById('pp0-y').textContent=d.year.replace('c.\u2009','');
+  document.getElementById('pp0-items').innerHTML=d.history.map(i=>'<li>'+i+'</li>').join('');
+  document.getElementById('pp1-items').innerHTML=d.architecture.items.map(i=>'<li>'+i+'</li>').join('');
+  document.getElementById('pp1-extra').innerHTML=d.architecture.extra;
+  document.getElementById('pp2-items').innerHTML=d.condition.items.map(i=>'<li>'+i+'</li>').join('');
+  document.getElementById('pp2-extra').innerHTML=d.condition.extra;
+  document.getElementById('pp3-title').textContent=d.future.title;
+  document.getElementById('pp3-items').innerHTML=d.future.items.map(i=>'<li>'+i+'</li>').join('');
+  document.getElementById('pp3-extra').innerHTML=d.future.extra;
+  document.getElementById('bldg-label').textContent=d.name+' \u00A0\u00B7\u00A0 '+d.year;
+  document.getElementById('done-banner').textContent='\u2736 Conservation Design Complete \u2014 '+d.name;
+}
 
-var camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 4, 11);
-camera.lookAt(0, 1.8, 0);
+// ── THREE.JS ──────────────────────────────────────────
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.setClearColor(0xF2EDE5,1);
+renderer.autoClear=false;  // we manage clearing manually for split render
 
-// ── LIGHTS ────────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0x304060, 3.5));
-var sun = new THREE.DirectionalLight(0x6090e0, 2.2);
-sun.position.set(5, 10, 7); sun.castShadow = true;
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xF2EDE5);
+scene.fog=new THREE.Fog(0xF2EDE5,45,95);
+const camera=new THREE.PerspectiveCamera(38,window.innerWidth/window.innerHeight,0.1,200);
+
+scene.add(new THREE.AmbientLight(0xFFF8F2,0.85));
+const sun=new THREE.DirectionalLight(0xFFF5E0,2.2);
+sun.position.set(14,22,10);sun.castShadow=true;
+sun.shadow.camera.left=sun.shadow.camera.bottom=-22;
+sun.shadow.camera.right=sun.shadow.camera.top=22;
+sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-0.001;
 scene.add(sun);
-var rim = new THREE.DirectionalLight(0x102050, 1.0);
-rim.position.set(-5, 3, -5);
-scene.add(rim);
-var fill = new THREE.PointLight(0x2060c0, 1.8, 22);
-fill.position.set(0, 6, 6);
-scene.add(fill);
+const fill=new THREE.DirectionalLight(0xD0E8F8,0.45);
+fill.position.set(-10,6,-6);scene.add(fill);
 
-// ── GROUND ────────────────────────────────────────────────────────────────────
-scene.add(new THREE.GridHelper(30, 30, 0x0d2444, 0x060f1e));
-var gp = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.4 }));
-gp.rotation.x = -Math.PI / 2; gp.receiveShadow = true; scene.add(gp);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(70,70),new THREE.MeshLambertMaterial({color:0xCEC4AE}));
+ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+// ground path added below
+const path2=new THREE.Mesh(new THREE.BoxGeometry(8,.06,20),new THREE.MeshLambertMaterial({color:0xBDB4A0}));
+path2.position.set(0,.03,0);scene.add(path2);
 
-// ── SINGLE WORLD GROUP ────────────────────────────────────────────────────────
-var world = new THREE.Group();
-scene.add(world);
-
-// ── MATERIALS ─────────────────────────────────────────────────────────────────
-var MB = new THREE.MeshPhongMaterial({ color:0x1a3a6e, emissive:0x081830, specular:0x4080c0, shininess:40 });
-var MC = new THREE.MeshPhongMaterial({ color:0x1e4480, emissive:0x0a1e3c, specular:0x5090d0, shininess:60 });
-var MW = new THREE.MeshPhongMaterial({ color:0x04102a, emissive:0x102866, emissiveIntensity:0.9 });
-var LE = new THREE.LineBasicMaterial({ color:0x4878c8 });
-var LC = new THREE.LineBasicMaterial({ color:0x5090d8 });
-var LW = new THREE.LineBasicMaterial({ color:0x2050a0 });
-
-// ── BUILDING GROUP ────────────────────────────────────────────────────────────
-var bldg = new THREE.Group();
-world.add(bldg);
-
-function addBox(w, h, d, mat, x, y, z) {
-  var g = new THREE.BoxGeometry(w, h, d);
-  var m = new THREE.Mesh(g, mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; bldg.add(m);
-  var el = new THREE.LineSegments(new THREE.EdgesGeometry(g), LE); el.position.set(x,y,z); bldg.add(el);
+function tmat(o){return new THREE.MeshPhongMaterial({transparent:true,opacity:0,...o});}
+const MT={
+  wall:()=>tmat({color:0xE8DCC8,specular:0x0A0808,shininess:18}),
+  roof:()=>tmat({color:0x902020,specular:0x180808,shininess:28}),
+  col:()=>tmat({color:0xF0E6D2,specular:0x0A0808,shininess:28}),
+  win:()=>tmat({color:0x3A506C,specular:0x445566,shininess:80}),
+  trim:()=>tmat({color:0xDAD0B8,specular:0x080606,shininess:20}),
+  dark:()=>tmat({color:0xD6C8A4,specular:0x080604,shininess:14}),
+  gnd:()=>tmat({color:0xC4B89E,specular:0x020200,shininess:8}),
+};
+function setOp(g,v){g.traverse(o=>{if(o.isMesh&&o.material.transparent)o.material.opacity=v;});}
+function mk(geo,mat,x,y,z,rx){const o=new THREE.Mesh(geo,mat);o.position.set(x||0,y||0,z||0);if(rx)o.rotation.x=rx;o.castShadow=true;o.receiveShadow=true;return o;}
+function makeTree(x,z,h){
+  const g=new THREE.Group();
+  g.add(mk(new THREE.CylinderGeometry(.11,.16,h*.42,6),new THREE.MeshLambertMaterial({color:0x6B4A28}),0,h*.21,0));
+  g.add(mk(new THREE.SphereGeometry(h*.3+.18,7,5),new THREE.MeshLambertMaterial({color:0x4A7038}),0,h*.65,0));
+  g.position.set(x,0,z);scene.add(g);
 }
-function addCyl(rt, rb, h, seg, mat, lmat, x, y, z) {
-  var g = new THREE.CylinderGeometry(rt,rb,h,seg);
-  var m = new THREE.Mesh(g, mat); m.position.set(x,y,z); m.castShadow=true; bldg.add(m);
-  var el = new THREE.LineSegments(new THREE.EdgesGeometry(g), lmat||LC); el.position.set(x,y,z); bldg.add(el);
+[[17,-7],[17,7],[-17,-6],[-17,6],[11,-12],[-11,-12],[0,13],[13,10],[-13,10]].forEach(([x,z])=>makeTree(x,z,1.6+Math.random()*1.2));
+
+function buildBuilding(W,H,D){
+  const g=new THREE.Group();
+  const structs=new THREE.Group();
+  structs.add(mk(new THREE.BoxGeometry(W,H,D),MT.wall(),0,H/2,0));
+  structs.add(mk(new THREE.BoxGeometry(3.8,H,8),MT.wall(),-(W/2+1.4),H/2,4.5));
+  structs.add(mk(new THREE.BoxGeometry(3.8,H,8),MT.wall(),(W/2+1.4),H/2,4.5));
+  structs.add(mk(new THREE.BoxGeometry(W+.4,.28,D+.4),MT.trim(),0,H+.14,0));
+  structs.add(mk(new THREE.BoxGeometry(W+1,.5,D+1),MT.gnd(),0,.25,0));
+  structs.add(mk(new THREE.BoxGeometry(7,.28,1.6),MT.gnd(),0,.14,-D/2-1.7));
+  structs.add(mk(new THREE.BoxGeometry(5.5,.28,1.1),MT.gnd(),0,.42,-D/2-1.2));
+  g.add(structs);
+  const roofs=new THREE.Group();
+  const rfF=mk(new THREE.BoxGeometry(W+1.6,.32,D/2+1.1),MT.roof(),0,H+.95,-D/4);rfF.rotation.x=0.36;
+  const rfB=mk(new THREE.BoxGeometry(W+1.6,.32,D/2+1.1),MT.roof(),0,H+.95,D/4);rfB.rotation.x=-0.36;
+  roofs.add(rfF);roofs.add(rfB);
+  roofs.add(mk(new THREE.BoxGeometry(W+1.6,.38,1.6),MT.roof(),0,H+2.08,0));
+  [-(W/2+1.4),(W/2+1.4)].forEach(wx=>{
+    const a=mk(new THREE.BoxGeometry(3.8+.4,.28,4.2),MT.roof(),wx,H+.7,-2);a.rotation.x=0.32;
+    const b=mk(new THREE.BoxGeometry(3.8+.4,.28,4.2),MT.roof(),wx,H+.7,2);b.rotation.x=-0.32;
+    roofs.add(a);roofs.add(b);
+    roofs.add(mk(new THREE.BoxGeometry(3.8+.4,.3,1.2),MT.roof(),wx,H+1.7,0));
+  });
+  g.add(roofs);
+  const facade=new THREE.Group();
+  for(let i=-3.5;i<=3.5;i+=1){
+    if(Math.abs(i)<.6)continue;
+    facade.add(mk(new THREE.CylinderGeometry(.19,.22,H+.28,8),MT.col(),i*2.2,(H+.28)/2,-D/2-.12));
+    facade.add(mk(new THREE.BoxGeometry(.52,.22,.52),MT.col(),i*2.2,H+.14,-D/2-.12));
+    facade.add(mk(new THREE.BoxGeometry(1.15,2.1,.13),MT.win(),i*2.2,H*.5,-D/2-.1));
+    facade.add(mk(new THREE.BoxGeometry(1.15,.4,.13),MT.win(),i*2.2,H*.5+1.25,-D/2-.1));
+  }
+  for(let wx=-3;wx<=3;wx++){[-W/2-.07,W/2+.07].forEach(sx=>{facade.add(mk(new THREE.BoxGeometry(.13,1.8,.95),MT.win(),sx,H*.5,wx*1.5));});}
+  facade.add(mk(new THREE.BoxGeometry(5,H,.7),MT.dark(),0,H/2,-D/2-.35));
+  facade.add(mk(new THREE.BoxGeometry(5.4,.28,.75),MT.trim(),0,H+.14,-D/2-.35));
+  facade.add(mk(new THREE.BoxGeometry(1.6,3.,.14),MT.win(),0,1.5,-D/2-.72));
+  facade.add(mk(new THREE.BoxGeometry(1.8,.5,.14),MT.win(),0,3.25,-D/2-.72));
+  g.add(facade);
+  g.userData={structs,roofs,facade};
+  return g;
 }
 
-// Steps
-addBox(5.8,0.14,3.0,MB, 0,0.07,0);
-addBox(5.4,0.14,2.8,MB, 0,0.21,0);
-addBox(5.0,0.14,2.6,MB, 0,0.35,0);
-// Platform
-addBox(4.8,0.24,2.5,MB, 0,0.59,0);
+function buildFuture(W,H,D,wing){
+  const g=new THREE.Group();
+  const fm=new THREE.MeshPhongMaterial({color:0xBB2030,transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false});
+  const em=new THREE.LineBasicMaterial({color:0xEE2040,linewidth:1.5});
+  g.add(mk(new THREE.BoxGeometry(W+.6,H+1.2,D+.6),fm,0,(H+1.2)/2+.3,0));
+  const env=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W+.6,H+1.2,D+.6)),em);
+  env.position.set(0,(H+1.2)/2+.3,0);g.add(env);
+  if(wing){
+    g.add(mk(new THREE.BoxGeometry(5.5,H+1,D+1),fm,W/2+4.85,(H+1)/2+.3,.5));
+    const we=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(5.5,H+1,D+1)),em);
+    we.position.set(W/2+4.85,(H+1)/2+.3,.5);g.add(we);
+  }
+  g.visible=false;return g;
+}
 
-// Main body (keep reference for overlays)
-var bodyGeo = new THREE.BoxGeometry(4.8,2.4,2.5);
-var bodyM = new THREE.Mesh(bodyGeo, MB); bodyM.position.set(0,1.87,0); bodyM.castShadow=true; bodyM.receiveShadow=true; bldg.add(bodyM);
-var bodyE = new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeo), LE); bodyE.position.set(0,1.87,0); bldg.add(bodyE);
+function buildEdges(W,H,D){
+  const g=new THREE.Group();
+  const e=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W,H,D)),new THREE.LineBasicMaterial({color:0x1E48B0}));
+  e.position.set(0,H/2,0);g.add(e);g.visible=false;return g;
+}
 
-// Entablature
-addBox(5.0, 0.12,2.65,MC, 0,3.19,0);
-addBox(4.96,0.22,2.62,MB, 0,3.37,0);
-addBox(5.04,0.12,2.67,MC, 0,3.54,0);
+const hG=buildBuilding(17,5,11);scene.add(hG);
+const hFut=buildFuture(17,5,11,true);scene.add(hFut);
+const hArch=buildEdges(17,5,11);scene.add(hArch);
+const dG=buildBuilding(14,4.5,9);dG.visible=false;scene.add(dG);
+const dFut=buildFuture(14,4.5,9,false);scene.add(dFut);
+const dArch=buildEdges(14,4.5,9);scene.add(dArch);
 
-// Pediment
-var ps = new THREE.Shape();
-ps.moveTo(-2.52,0); ps.lineTo(2.52,0); ps.lineTo(0,1.12); ps.closePath();
-var pedGeo = new THREE.ExtrudeGeometry(ps, { depth:2.68, bevelEnabled:false });
-var pedM = new THREE.Mesh(pedGeo, MB); pedM.position.set(0,3.60,-1.34); pedM.castShadow=true; bldg.add(pedM);
-var pedE = new THREE.LineSegments(new THREE.EdgesGeometry(pedGeo), LE); pedE.position.set(0,3.60,-1.34); bldg.add(pedE);
+// ── SPLIT OVERLAY DRAG ────────────────────────────────
+let divX=0.5;  // 0..1
+let divDragging=false;
+const splitOverlay=document.getElementById('split-overlay');
+const slDiv=document.getElementById('sl-div');
+const slHint=document.getElementById('sl-drag-hint');
+let hintFaded=false;
 
-// Oculus
-var oG = new THREE.CylinderGeometry(0.23,0.23,0.07,20);
-var oM = new THREE.Mesh(oG, MW); oM.rotation.x=Math.PI/2; oM.position.set(0,4.22,1.36); bldg.add(oM);
-var tG = new THREE.TorusGeometry(0.23,0.04,8,20);
-var tM = new THREE.Mesh(tG, MC); tM.position.set(0,4.22,1.37); bldg.add(tM);
+function setDivX(px){
+  divX=Math.max(.03,Math.min(.97,px/window.innerWidth));
+  slDiv.style.left=(divX*100)+'%';
+}
 
-// 6 Columns
-var colXs = [-1.9,-1.14,-0.38,0.38,1.14,1.9];
-colXs.forEach(function(x) {
-  addBox(0.30,0.14,0.30, MC, x,3.42,1.28);          // capital
-  addCyl(0.145,0.12,0.11,10, MC,LC, x,3.30,1.28);    // echinus
-  addCyl(0.11,0.13,2.72,12,  MC,LC, x,1.99,1.28);    // shaft
-  addCyl(0.145,0.16,0.11,10, MC,LC, x,0.76,1.28);    // base ring
-  addBox(0.28,0.11,0.28, MC, x,0.65,1.28);            // plinth
-});
+slDiv.addEventListener('mousedown',e=>{divDragging=true;e.preventDefault();});
+window.addEventListener('mousemove',e=>{if(!divDragging)return;setDivX(e.clientX);fadeDragHint();});
+window.addEventListener('mouseup',()=>divDragging=false);
+slDiv.addEventListener('touchstart',e=>{divDragging=true;e.preventDefault();},{passive:false});
+window.addEventListener('touchmove',e=>{if(!divDragging)return;setDivX(e.touches[0].clientX);fadeDragHint();},{passive:true});
+window.addEventListener('touchend',()=>divDragging=false);
 
-// Windows
-var winXs = [-1.66,-0.98,0.98,1.66];
-[2.28,1.42].forEach(function(wy) {
-  winXs.forEach(function(wx) {
-    var wg = new THREE.BoxGeometry(0.40,0.50,0.07);
-    var wm = new THREE.Mesh(wg, MW); wm.position.set(wx,wy,1.28); bldg.add(wm);
-    var we = new THREE.LineSegments(new THREE.EdgesGeometry(wg), LW); we.position.set(wx,wy,1.28); bldg.add(we);
-    var mh = new THREE.Mesh(new THREE.BoxGeometry(0.40,0.02,0.02),MC); mh.position.set(wx,wy,1.31); bldg.add(mh);
-    var mv = new THREE.Mesh(new THREE.BoxGeometry(0.02,0.50,0.02),MC); mv.position.set(wx,wy,1.31); bldg.add(mv);
+function fadeDragHint(){
+  if(!hintFaded){hintFaded=true;slHint.style.opacity='0';}
+}
+
+// ── CAMERA ORBIT ──────────────────────────────────────
+let theta=0.65,phi=0.62,dragging=false,mx0=0,my0=0,autoRot=true;
+canvas.addEventListener('mousedown',e=>{if(divDragging)return;dragging=true;autoRot=false;mx0=e.clientX;my0=e.clientY;});
+window.addEventListener('mousemove',e=>{if(!dragging||divDragging)return;theta-=(e.clientX-mx0)*.006;phi=Math.max(.2,Math.min(1.35,phi-(e.clientY-my0)*.006));mx0=e.clientX;my0=e.clientY;});
+window.addEventListener('mouseup',()=>{dragging=false;setTimeout(()=>autoRot=true,5000);});
+canvas.addEventListener('touchstart',e=>{if(e.target===slDiv||e.target===document.getElementById('sl-handle'))return;dragging=true;autoRot=false;mx0=e.touches[0].clientX;my0=e.touches[0].clientY;},{passive:true});
+canvas.addEventListener('touchmove',e=>{if(!dragging)return;theta-=(e.touches[0].clientX-mx0)*.006;phi=Math.max(.2,Math.min(1.35,phi-(e.touches[0].clientY-my0)*.006));mx0=e.touches[0].clientX;my0=e.touches[0].clientY;},{passive:true});
+canvas.addEventListener('touchend',()=>{dragging=false;setTimeout(()=>autoRot=true,5000);});
+
+// ── SCROLL ────────────────────────────────────────────
+let targetT=0,currentT=0;
+window.addEventListener('scroll',()=>{const mx=document.documentElement.scrollHeight-window.innerHeight;targetT=mx>0?window.scrollY/mx:0;},{passive:true});
+
+// ── STATE ─────────────────────────────────────────────
+let curBldg='herrera';
+const PT=[0.10,0.32,0.56,0.76];
+const lerp=(a,b,t)=>a+(b-a)*t;
+const cl01=v=>Math.max(0,Math.min(1,v));
+const remap=(v,lo,hi)=>cl01((v-lo)/(hi-lo));
+const ss=t=>t*t*(3-2*t);
+
+// ── SCENE UPDATE ──────────────────────────────────────
+function updateScene(t){
+  const G   =curBldg==='herrera'?hG:dG;
+  const Arch=curBldg==='herrera'?hArch:dArch;
+
+  document.getElementById('gpb').style.width=(t*100).toFixed(1)+'%';
+
+  // Building materialises
+  const strT=ss(remap(t,0,.16));
+  setOp(G.userData.structs,strT);
+  G.userData.structs.position.y=lerp(-1.8,0,strT);
+  setOp(G.userData.roofs,ss(remap(t,.08,.22)));
+  G.userData.roofs.position.y=lerp(2.5,0,ss(remap(t,.08,.22)));
+  setOp(G.userData.facade,ss(remap(t,.18,.32)));
+
+  Arch.visible=t>=PT[1]&&t<PT[2];
+
+  // Background
+  let bgHex,fillHex,fillInt;
+  if(t<PT[1]){bgHex=0xF2EDE5;fillHex=0xD0E8F8;fillInt=.45;}
+  else if(t<PT[2]){bgHex=0xECF0F8;fillHex=0xA4C4F8;fillInt=.75;}
+  else if(t<PT[3]){bgHex=0xF4EDEB;fillHex=0xF8C0A0;fillInt=.55;}
+  else{bgHex=0xEEEBF2;fillHex=0xB8C0F0;fillInt=.60;}
+  scene.background=new THREE.Color(bgHex);
+  scene.fog=new THREE.Fog(bgHex,45,95);
+  renderer.setClearColor(bgHex,1);
+  fill.color.setHex(fillHex);
+  fill.intensity=fillInt;
+
+  // Camera
+  const ang=-.15+t*1.0;
+  const rad=lerp(26,18,t*.85);
+  const cp =lerp(.62,.50,t*.7);
+  camera.position.x=rad*Math.sin(ang)*Math.sin(cp);
+  camera.position.z=rad*Math.cos(ang)*Math.sin(cp);
+  camera.position.y=rad*Math.cos(cp);
+  camera.lookAt(0,2.8,0);
+
+  // Panels
+  document.getElementById('pp0').classList.toggle('vis',t>=PT[0]&&t<PT[1]);
+  document.getElementById('pp1').classList.toggle('vis',t>=PT[1]&&t<PT[2]);
+  document.getElementById('pp2').classList.toggle('vis',t>=PT[2]&&t<PT[3]);
+  document.getElementById('pp3').classList.toggle('vis',t>=PT[3]);
+
+  // Mode badge
+  const badges=['Scroll to Begin','Historical Documentation','Architectural Survey','Condition Assessment','Drag Divider to Compare'];
+  const pi=t<PT[0]?0:t<PT[1]?1:t<PT[2]?2:t<PT[3]?3:4;
+  document.getElementById('mode-badge').textContent=badges[pi];
+
+  // Sidebar dots
+  document.querySelectorAll('.prog-wrap').forEach((el,i)=>{
+    const passed=t>=PT[i];const active=passed&&(i===PT.length-1||t<PT[i+1]);
+    el.classList.toggle('active',active);el.classList.toggle('done',passed&&!active);
+  });
+
+  // Nav active
+  const cm=pi>0?['history','architecture','condition','future'][pi-1]:'';
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.toggle('active',b.dataset.m===cm));
+
+  // Condition markers
+  const showC=t>=PT[2]&&t<PT[3];
+  ['cm0','cm1','cm2','cml0','cml1','cml2'].forEach(id=>document.getElementById(id).classList.toggle('show',showC));
+
+  // Arch annotations
+  const showA=t>=PT[1]&&t<PT[2];
+  ['aa0','aa1','aa2'].forEach(id=>document.getElementById(id).classList.toggle('show',showA));
+
+  // Show split overlay in future phase
+  splitOverlay.classList.toggle('show',t>=PT[3]);
+
+  // Hints/banner
+  document.getElementById('scroll-hint').style.opacity=t<.04?'1':'0';
+  document.getElementById('done-banner').classList.toggle('vis',t>=.96);
+}
+
+// ── RENDER (scissor split in future phase) ────────────
+function renderFrame(t){
+  const W=renderer.domElement.width;
+  const H=renderer.domElement.height;
+  const inFuture=t>=PT[3];
+  const Fut=curBldg==='herrera'?hFut:dFut;
+
+  if(inFuture){
+    const sx=Math.round(divX*W);
+
+    renderer.setScissorTest(true);
+    renderer.clear(true,true,true);
+
+    // LEFT half: existing building, no future overlay
+    Fut.visible=false;
+    renderer.setScissor(0,0,sx,H);
+    renderer.setViewport(0,0,W,H);
+    renderer.render(scene,camera);
+
+    // RIGHT half: future overlay visible
+    Fut.visible=true;
+    renderer.setScissor(sx,0,W-sx,H);
+    renderer.setViewport(0,0,W,H);
+    renderer.render(scene,camera);
+
+    renderer.setScissorTest(false);
+    renderer.setViewport(0,0,W,H);
+
+  } else {
+    // Normal single-pass render
+    Fut.visible=false;
+    renderer.clear(true,true,true);
+    renderer.setScissorTest(false);
+    renderer.setViewport(0,0,W,H);
+    renderer.render(scene,camera);
+  }
+}
+
+// ── BUILDING SWITCH ───────────────────────────────────
+function switchBldg(b){
+  curBldg=b;
+  document.querySelectorAll('.bldg-tab').forEach(t=>t.classList.toggle('active',t.dataset.b===b));
+  hG.visible=b==='herrera';dG.visible=b==='dolce';
+  hFut.visible=dFut.visible=hArch.visible=dArch.visible=false;
+  divX=0.5;slDiv.style.left='50%';
+  hintFaded=false;slHint.style.opacity='1';
+  window.scrollTo({top:0,behavior:'smooth'});
+  targetT=0;
+  populate(b);updateScene(0);
+}
+document.querySelectorAll('.bldg-tab').forEach(btn=>btn.addEventListener('click',()=>switchBldg(btn.dataset.b)));
+
+// ── NAV JUMP ──────────────────────────────────────────
+document.querySelectorAll('.nbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const mx=document.documentElement.scrollHeight-window.innerHeight;
+    window.scrollTo({top:parseFloat(btn.dataset.t)*mx,behavior:'smooth'});
   });
 });
 
-// Arch entrance
-var aG = new THREE.BoxGeometry(0.62,1.05,0.07);
-var aM = new THREE.Mesh(aG, MW); aM.position.set(0,1.0,1.28); bldg.add(aM);
-var aE = new THREE.LineSegments(new THREE.EdgesGeometry(aG), LW); aE.position.set(0,1.0,1.28); bldg.add(aE);
-// Arch top
-var atG = new THREE.CylinderGeometry(0.31,0.31,0.07,14,1,false,0,Math.PI);
-var atM = new THREE.Mesh(atG, MW); atM.rotation.z=Math.PI/2; atM.rotation.y=Math.PI/2; atM.position.set(0,1.57,1.28); bldg.add(atM);
-// Keystone
-addBox(0.10,0.19,0.09, MC, 0,1.63,1.27);
-
-// ── ARCHITECTURE OVERLAY ──────────────────────────────────────────────────────
-var archOv = new THREE.Group(); archOv.visible=false; world.add(archOv);
-var aoEdge = new THREE.LineBasicMaterial({ color:0x34d399 });
-function addAO(geo, x, y, z) {
-  var m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0x10b981,wireframe:true,transparent:true,opacity:0.25}));
-  m.position.set(x,y,z); archOv.add(m);
-  var el = new THREE.LineSegments(new THREE.EdgesGeometry(geo), aoEdge); el.position.set(x,y,z); archOv.add(el);
-}
-addAO(bodyGeo.clone(), 0,1.87,0);
-colXs.forEach(function(x){ addAO(new THREE.CylinderGeometry(0.11,0.13,2.72,12),x,1.99,1.28); });
-addAO(new THREE.BoxGeometry(5.04,0.12,2.67), 0,3.54,0);
-
-// ── CONDITION OVERLAY ─────────────────────────────────────────────────────────
-var condOv = new THREE.Group(); condOv.visible=false; world.add(condOv);
-var condBody = new THREE.Mesh(bodyGeo.clone(), new THREE.MeshBasicMaterial({color:0xf97316,wireframe:true,transparent:true,opacity:0.18}));
-condBody.position.set(0,1.87,0); condOv.add(condBody);
-var crackMat = new THREE.LineBasicMaterial({ color:0xff7020, transparent:true, opacity:0.95 });
-[
-  [[0.68,2.2,1.31],[0.84,2.62,1.31]],
-  [[-1.50,1.35,1.31],[-1.32,1.76,1.31]],
-  [[1.45,0.92,1.31],[1.51,1.36,1.31]],
-  [[-0.52,1.95,1.31],[-0.44,2.28,1.31]],
-  [[0.22,1.55,-1.26],[0.33,1.96,-1.26]]
-].forEach(function(pts) {
-  var geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(pts[0][0],pts[0][1],pts[0][2]),new THREE.Vector3(pts[1][0],pts[1][1],pts[1][2])]);
-  condOv.add(new THREE.Line(geo, crackMat));
-  var dot = new THREE.Mesh(new THREE.SphereGeometry(0.05,6,6), new THREE.MeshBasicMaterial({color:0xff7020}));
-  dot.position.set(pts[0][0],pts[0][1],pts[0][2]); condOv.add(dot);
-});
-winXs.forEach(function(wx) {
-  var s = new THREE.Mesh(new THREE.BoxGeometry(0.40,0.50,0.02), new THREE.MeshBasicMaterial({color:0xf97316,transparent:true,opacity:0.28}));
-  s.position.set(wx,2.28,1.29); condOv.add(s);
-});
-
-// ── FUTURE OVERLAY ────────────────────────────────────────────────────────────
-var futOv = new THREE.Group(); futOv.visible=false; world.add(futOv);
-var futPairs = []; // [{solid, wire}] for animation
-
-function addFB(w, h, d, x, y, z) {
-  var geo = new THREE.BoxGeometry(w,h,d);
-  var sol = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({color:0x6b2800,emissive:0x3a1400,transparent:true,opacity:0.22}));
-  var wir = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0xea580c,wireframe:true,transparent:true,opacity:0.55}));
-  var edg = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0xff7030}));
-  sol.position.set(x,y,z); wir.position.set(x,y,z); edg.position.set(x,y,z);
-  futOv.add(sol); futOv.add(wir); futOv.add(edg);
-  futPairs.push({solid:sol, wire:wir});
-}
-function addFC(rt, rb, h, x, y, z) {
-  var geo = new THREE.CylinderGeometry(rt,rb,h,8);
-  var wir = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color:0xea580c,wireframe:true,transparent:true,opacity:0.50}));
-  wir.position.set(x,y,z); futOv.add(wir); futPairs.push({solid:null,wire:wir});
-}
-
-[-3.4,3.4].forEach(function(x) {
-  addFB(1.8,2.7,2.5, x,1.42,0);
-  [x-0.65,x+0.65].forEach(function(cx){ addFC(0.10,0.12,2.7,cx,1.42,1.28); });
-  [2.1,1.3].forEach(function(wy) {
-    var ww = new THREE.Mesh(new THREE.BoxGeometry(0.34,0.42,0.05), new THREE.MeshBasicMaterial({color:0xea580c,transparent:true,opacity:0.30}));
-    ww.position.set(x,wy,1.28); futOv.add(ww);
-  });
-});
-addFB(4.8,0.75,2.5, 0,4.10,0);
-addFB(5.04,0.13,2.68, 0,4.525,0);
-addFB(5.04,0.42,0.13, 0,4.77,1.35);
-addFB(5.04,0.42,0.13, 0,4.77,-1.35);
-addFB(0.13,0.42,2.68, 0,4.77,0);
-
-// ── DRAG CONTROLS ─────────────────────────────────────────────────────────────
-var dragging=false, lastP={x:0,y:0}, rY=0, rX=0.12, autoRot=true;
-var cvs=renderer.domElement;
-function onDown(x,y){dragging=true;autoRot=false;lastP={x:x,y:y};document.getElementById('hint').style.opacity='0';}
-function onMove(x,y){if(!dragging)return;rY+=(x-lastP.x)*0.006;rX=Math.max(-0.28,Math.min(0.55,rX+(y-lastP.y)*0.004));lastP={x:x,y:y};}
-function onUp(){dragging=false;}
-cvs.addEventListener('mousedown', function(e){onDown(e.clientX,e.clientY);});
-cvs.addEventListener('mousemove', function(e){onMove(e.clientX,e.clientY);});
-cvs.addEventListener('mouseup',   onUp); cvs.addEventListener('mouseleave',onUp);
-cvs.addEventListener('touchstart',function(e){e.preventDefault();onDown(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
-cvs.addEventListener('touchmove', function(e){e.preventDefault();onMove(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
-cvs.addEventListener('touchend',  onUp);
-
-// ── ANIMATION ─────────────────────────────────────────────────────────────────
-var scanY=60, scanEl=document.getElementById('scan');
-function animate(){
-  requestAnimationFrame(animate);
-  if(autoRot) rY+=0.003;
-  world.rotation.y=rY; world.rotation.x=rX;
-  scanY+=0.7; if(scanY>window.innerHeight-98)scanY=60; scanEl.style.top=scanY+'px';
-  if(futOv.visible){
-    var t=Date.now()*0.001, p=Math.sin(t*2.2);
-    futPairs.forEach(function(pair){
-      if(pair.solid) pair.solid.material.opacity=0.13+0.07*p;
-      if(pair.wire)  pair.wire.material.opacity =0.38+0.20*p;
-    });
-  }
-  if(condOv.visible){
-    var t2=Date.now()*0.002;
-    crackMat.opacity=0.55+0.45*Math.abs(Math.sin(t2*2.5));
-  }
-  renderer.render(scene,camera);
-}
-animate();
-
-window.addEventListener('resize',function(){
-  camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+// ── RESIZE ────────────────────────────────────────────
+window.addEventListener('resize',()=>{
   renderer.setSize(window.innerWidth,window.innerHeight);
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
 });
 
-// ── UI ────────────────────────────────────────────────────────────────────────
-var activeK=null, futInt=null;
-var CO={h:'#d97706',a:'#10b981',c:'#f97316',f:'#06b6d4'};
-var RG={h:[217,119,6],a:[16,185,129],c:[249,115,22],f:[6,182,212]};
-var LB={h:'HISTORY MODE',a:'ARCHITECTURE MODE',c:'CONDITION MODE',f:'FUTURE OVERLAY'};
+// ── LOOP ─────────────────────────────────────────────
+const clock=new THREE.Clock();
+(function loop(){
+  requestAnimationFrame(loop);
+  currentT+=(targetT-currentT)*.055;
+  if(autoRot)theta+=.0022;
+  updateScene(currentT);
+  renderFrame(currentT);
+})();
 
-window.pick=function(k){
-  if(activeK===k){closeAll();return;}
-  closeAll(); activeK=k;
-  var b=document.getElementById('btn-'+k), l=document.getElementById('lbl-'+k), rv=RG[k];
-  if(b){b.style.borderColor=CO[k]; b.style.background='rgba('+rv+',.13)';}
-  if(l) l.style.color=CO[k];
-  var p=document.getElementById('ip-'+k); if(p) p.style.transform='translateY(0)';
-  var ml=document.getElementById('mode-lbl'); if(ml){ml.textContent=LB[k];ml.style.color=CO[k];}
-  archOv.visible=(k==='a'); condOv.visible=(k==='c');
-  if(k==='f'){futOv.visible=true; startFut();}
-};
-
-function closeAll(){
-  activeK=null; if(futInt){clearInterval(futInt);futInt=null;}
-  archOv.visible=false; condOv.visible=false; futOv.visible=false;
-  var os=document.getElementById('ovs'), ob=document.getElementById('ovb');
-  if(os){os.textContent='EXISTING';os.style.color='#06b6d4';os.style.background='rgba(6,182,212,.1)';}
-  if(ob){ob.style.width='0%';ob.style.background='#06b6d4';}
-  var ml=document.getElementById('mode-lbl'); if(ml) ml.textContent='';
-  ['h','a','c','f'].forEach(function(k){
-    var b=document.getElementById('btn-'+k), l=document.getElementById('lbl-'+k);
-    if(b){b.style.borderColor='#16253a';b.style.background='transparent';}
-    if(l) l.style.color='#2e4d6a';
-  });
-  document.querySelectorAll('.ip').forEach(function(p){p.style.transform='translateY(200%)';});
-}
-
-function startFut(){
-  var on=false;
-  function tog(){
-    on=!on;
-    var os=document.getElementById('ovs'), ob=document.getElementById('ovb');
-    if(os){os.textContent=on?'PROPOSED':'EXISTING';os.style.color=on?'#ea580c':'#06b6d4';os.style.background=on?'rgba(234,88,12,.1)':'rgba(6,182,212,.1)';}
-    if(ob){ob.style.width=on?'100%':'0%';ob.style.background=on?'#ea580c':'#06b6d4';}
-  }
-  tog(); futInt=setInterval(tog,2600);
-}
-
-window.switchBld=function(n){
-  var BD={herrera:{l:'HERRERA HALL ◆ c.1946',c:'10.7202°N 122.5621°E'},dolce:{l:'DOLCE GARCIA HALL ◆ c.1950',c:'10.7205°N 122.5619°E'}};
-  document.getElementById('bld-lbl').textContent=BD[n].l;
-  document.getElementById('gps-txt').textContent=BD[n].c;
-  ['herrera','dolce'].forEach(function(x){
-    var b=document.getElementById('bld-'+x);
-    if(x===n){b.style.background='#0f2744';b.style.color='#60a5fa';b.style.borderColor='#1d4ed8';}
-    else{b.style.background='transparent';b.style.color='#475569';b.style.borderColor='#334155';}
-  });
-  closeAll();
-};
+populate('herrera');
+updateScene(0);
 </script>
 </body>
 </html>
