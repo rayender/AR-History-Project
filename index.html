@@ -5,186 +5,206 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Heritage AR Demo — University of San Agustin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --white:#FFFFFF;--ivory:#FDFAF5;--beige:#F0E8D8;--beige2:#E2D4BE;--beige3:#D0C4AC;
-  --maroon:#8C1C2C;--maroon-d:#6A1220;--text:#1A0C06;--text2:#5C3C2A;--text3:#8A6A54;--blue:#1E44A0;
+  --maroon:#8C1C2C;--maroon-d:#6A1220;
+  --text:#1A0C06;--text2:#5C3C2A;--text3:#8A6A54;--blue:#1E44A0;
+  --beige2:#E2D4BE;--beige3:#D0C4AC;
+  --gb:rgba(253,250,245,.80);--gbo:rgba(255,255,255,.52);
 }
 html{scroll-behavior:auto;}
-body{background:var(--ivory);font-family:'DM Sans',sans-serif;color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+body{background:#f0ebe2;font-family:'Montserrat',sans-serif;color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;}
 #scroll-body{position:relative;height:520vh;z-index:1;pointer-events:none;}
 #gpb{position:fixed;top:0;left:0;height:3px;background:var(--maroon);z-index:90;width:0%;box-shadow:0 0 8px rgba(140,28,44,.5);}
-/* HEADER */
-#hdr{position:fixed;top:0;left:0;right:0;height:62px;background:rgba(253,250,245,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1.5px solid var(--beige2);display:flex;align-items:center;justify-content:space-between;padding:0 1.3rem;z-index:60;box-shadow:0 2px 14px rgba(26,12,6,.07);}
-.brand{display:flex;align-items:center;gap:.75rem;flex-shrink:0;}
-.logo{width:38px;height:38px;background:var(--maroon);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.logo svg{width:22px;height:22px;}
-.brand-name{font-size:.72rem;font-weight:600;color:var(--text);letter-spacing:.03em;white-space:nowrap;line-height:1.2;}
-.brand-sub{font-size:.55rem;color:var(--maroon);letter-spacing:.14em;text-transform:uppercase;margin-top:.1rem;}
-.bldg-tabs{display:flex;gap:.25rem;}
-.bldg-tab{cursor:pointer;background:none;border:1.5px solid var(--beige2);padding:.38rem .85rem;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:500;color:var(--text2);letter-spacing:.03em;transition:all .25s;white-space:nowrap;}
+
+/* ─ HEADER ─ */
+#hdr{
+  position:fixed;top:0;left:0;right:0;height:56px;
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  padding:0 1rem;z-index:60;
+  background:var(--gb);backdrop-filter:blur(24px) saturate(1.5);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  border-bottom:1px solid var(--gbo);
+  box-shadow:0 2px 20px rgba(26,12,6,.08),inset 0 1px 0 rgba(255,255,255,.6);
+}
+.brand{display:flex;align-items:center;gap:.6rem;flex-shrink:0;min-width:0;}
+.logo{width:32px;height:32px;background:var(--maroon);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo svg{width:18px;height:18px;}
+.brand-texts{min-width:0;}
+.brand-name{font-size:.66rem;font-weight:700;color:var(--text);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand-sub{font-size:.5rem;color:var(--maroon);letter-spacing:.14em;text-transform:uppercase;font-weight:500;}
+.hdr-right{display:flex;align-items:center;gap:.25rem;flex-shrink:0;}
+.bldg-tab{
+  cursor:pointer;background:none;border:1.5px solid var(--beige2);
+  padding:.3rem .65rem;font-family:'Montserrat',sans-serif;
+  font-size:.62rem;font-weight:600;color:var(--text2);letter-spacing:.02em;
+  transition:all .2s;white-space:nowrap;
+}
 .bldg-tab:hover{border-color:var(--maroon);color:var(--maroon);}
-.bldg-tab.active{background:var(--maroon);border-color:var(--maroon);color:white;font-weight:600;}
-/* AR FRAME */
-.ar-frame{position:fixed;inset:68px 14px 124px 14px;pointer-events:none;z-index:4;}
-.arc{position:absolute;width:28px;height:28px;border-color:rgba(140,28,44,.5);border-style:solid;}
-.arc.tl{top:0;left:0;border-width:2px 0 0 2px;}.arc.tr{top:0;right:0;border-width:2px 2px 0 0;}
-.arc.bl{bottom:0;left:0;border-width:0 0 2px 2px;}.arc.br{bottom:0;right:0;border-width:0 2px 2px 0;}
-/* MODE BADGE */
-#mode-badge{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:var(--maroon);color:white;font-size:.56rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;padding:.3rem 1rem;z-index:20;pointer-events:none;white-space:nowrap;}
-/* PHASE PANELS */
-.ph-panel{position:fixed;left:clamp(1rem,3vw,2rem);top:50%;transform:translateY(-50%) translateX(calc(-100% - 2rem));width:min(300px,88vw);background:rgba(253,250,245,.97);border-left:3px solid var(--maroon);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:20;opacity:0;transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .55s ease;pointer-events:none;}
-.ph-panel.vis{transform:translateY(-50%) translateX(0);opacity:1;}
-.ph-head{background:var(--maroon);color:white;padding:1rem 1.1rem .9rem;}
-.ph-num{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;opacity:.68;margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem;}
-.ph-num::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.25);}
-.ph-icon{font-size:1rem;margin-bottom:.3rem;display:block;}
-.ph-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;line-height:1.2;}
-.ph-sub{font-size:.62rem;opacity:.65;margin-top:.2rem;font-style:italic;}
-.ph-body{padding:1rem 1.1rem;}
-.ph-items{list-style:none;display:flex;flex-direction:column;gap:.55rem;}
-.ph-items li{font-size:.76rem;color:var(--text);line-height:1.6;padding-left:.9rem;position:relative;}
-.ph-items li::before{content:'';position:absolute;left:0;top:.58em;width:5px;height:5px;background:var(--maroon);border-radius:50%;}
-.ph-divider{height:1px;background:var(--beige2);margin:.75rem 0;}
-.ph-values{display:flex;gap:.35rem;flex-wrap:wrap;}
-.value-chip{background:var(--maroon);color:white;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .6rem;font-style:italic;font-family:'Playfair Display',serif;}
-.ph-extra{font-size:.7rem;color:var(--text2);line-height:1.7;font-style:italic;}
-.ph-stats{display:flex;gap:.8rem;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--beige2);}
+.bldg-tab.active{background:var(--maroon);border-color:var(--maroon);color:white;}
+/* AR button */
+#ar-btn{
+  cursor:pointer;background:none;border:1.5px solid var(--maroon);
+  padding:.3rem .65rem;font-family:'Montserrat',sans-serif;
+  font-size:.62rem;font-weight:700;color:var(--maroon);letter-spacing:.08em;
+  text-transform:uppercase;
+  display:flex;align-items:center;gap:.35rem;
+  transition:all .2s;white-space:nowrap;
+}
+#ar-btn:hover{background:var(--maroon);color:white;}
+#ar-btn svg{width:13px;height:13px;flex-shrink:0;}
+
+/* ─ MODE BADGE ─ */
+#mode-badge{
+  position:fixed;top:65px;left:50%;transform:translateX(-50%);
+  background:rgba(140,28,44,.88);backdrop-filter:blur(8px);
+  color:white;font-family:'Montserrat',sans-serif;
+  font-size:.52rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  padding:.26rem .9rem;z-index:20;pointer-events:none;white-space:nowrap;
+}
+
+/* ─ PHASE PANELS ─ */
+.ph-panel{
+  position:fixed;left:clamp(.75rem,2.5vw,1.5rem);top:50%;
+  transform:translateY(-50%) translateX(calc(-100% - 1.5rem));
+  width:min(284px,86vw);
+  background:rgba(253,250,245,.86);
+  backdrop-filter:blur(26px) saturate(1.5);
+  -webkit-backdrop-filter:blur(26px) saturate(1.5);
+  border-left:3px solid var(--maroon);
+  border:1px solid rgba(255,255,255,.52);
+  border-left:3px solid var(--maroon);
+  box-shadow:0 14px 44px rgba(26,12,6,.11),inset 0 1px 0 rgba(255,255,255,.6);
+  z-index:20;opacity:0;
+  transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .5s;
+  pointer-events:none;max-height:calc(100vh - 140px);overflow-y:auto;
+}
+.ph-panel.vis{transform:translateY(-50%) translateX(0);opacity:1;pointer-events:all;}
+.ph-head{background:var(--maroon);color:white;padding:.85rem 1rem .8rem;}
+.ph-num{font-family:'Montserrat',sans-serif;font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;opacity:.65;margin-bottom:.2rem;display:flex;align-items:center;gap:.4rem;font-weight:500;}
+.ph-num::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.22);}
+.ph-icon-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem;}
+.ph-icon{width:17px;height:17px;flex-shrink:0;opacity:.88;}
+.ph-title{font-family:'Montserrat',sans-serif;font-size:.98rem;font-weight:800;line-height:1.2;letter-spacing:-.01em;}
+.ph-sub{font-family:'Montserrat',sans-serif;font-size:.58rem;opacity:.6;margin-top:.18rem;font-weight:400;font-style:italic;}
+.ph-body{padding:.85rem 1rem;}
+.ph-items{list-style:none;display:flex;flex-direction:column;gap:.48rem;}
+.ph-items li{font-family:'Montserrat',sans-serif;font-size:.72rem;color:var(--text);line-height:1.6;padding-left:.82rem;position:relative;font-weight:400;}
+.ph-items li::before{content:'';position:absolute;left:0;top:.6em;width:4px;height:4px;background:var(--maroon);border-radius:50%;}
+.ph-divider{height:1px;background:rgba(0,0,0,.07);margin:.6rem 0;}
+.ph-values{display:flex;gap:.28rem;flex-wrap:wrap;}
+.value-chip{background:var(--maroon);color:white;font-family:'Montserrat',sans-serif;font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .55rem;font-weight:600;font-style:italic;}
+.ph-extra{font-family:'Montserrat',sans-serif;font-size:.66rem;color:var(--text2);line-height:1.7;font-style:italic;font-weight:400;}
+.ph-stats{display:flex;gap:.65rem;margin-top:.6rem;padding-top:.6rem;border-top:1px solid rgba(0,0,0,.07);}
 .ph-stat{flex:1;}
-.st-val{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--maroon);line-height:1;}
-.st-key{font-size:.55rem;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-top:.2rem;}
-/* PROGRESS SIDEBAR */
-#prog-sidebar{position:fixed;right:clamp(.8rem,2vw,1.5rem);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:0;z-index:20;}
+.st-val{font-family:'Montserrat',sans-serif;font-size:1rem;font-weight:800;color:var(--maroon);line-height:1;}
+.st-key{font-family:'Montserrat',sans-serif;font-size:.5rem;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-top:.18rem;font-weight:500;}
+/* section label above values */
+.ph-sect-lbl{font-family:'Montserrat',sans-serif;font-size:.52rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.38rem;font-weight:600;}
+
+/* ─ PROGRESS SIDEBAR ─ */
+#prog-sidebar{position:fixed;right:clamp(.65rem,1.6vw,1.1rem);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:0;z-index:20;}
 .prog-wrap{display:flex;flex-direction:column;align-items:center;}
-.prog-lbl{font-size:.5rem;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);margin-bottom:.25rem;opacity:0;transition:opacity .4s,color .4s;white-space:nowrap;max-height:0;overflow:hidden;}
-.prog-dot{width:7px;height:7px;border-radius:50%;background:var(--beige3);border:1px solid transparent;transition:background .4s,transform .4s,border-color .4s;}
-.prog-line{width:1px;height:24px;background:var(--beige3);opacity:.5;}
-.prog-wrap.active .prog-dot{background:var(--maroon);transform:scale(1.6);border-color:rgba(140,28,44,.3);box-shadow:0 0 10px rgba(140,28,44,.45);}
+.prog-lbl{font-family:'Montserrat',sans-serif;font-size:.46rem;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);margin-bottom:.2rem;opacity:0;transition:opacity .4s,color .4s;white-space:nowrap;max-height:0;overflow:hidden;font-weight:500;}
+.prog-dot{width:6px;height:6px;border-radius:50%;background:var(--beige3);border:1px solid transparent;transition:background .4s,transform .4s;}
+.prog-line{width:1px;height:20px;background:var(--beige3);opacity:.4;}
+.prog-wrap.active .prog-dot{background:var(--maroon);transform:scale(1.7);box-shadow:0 0 8px rgba(140,28,44,.4);}
 .prog-wrap.active .prog-lbl{opacity:1;color:var(--maroon);max-height:80px;}
-.prog-wrap.done .prog-dot{background:var(--maroon);opacity:.4;transform:scale(1);}
-/* LABELS / HINTS */
-#bldg-label{position:fixed;bottom:128px;left:50%;transform:translateX(-50%);background:rgba(140,28,44,.82);color:rgba(255,255,255,.95);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.28rem .9rem;z-index:20;pointer-events:none;white-space:nowrap;font-weight:500;}
-#scroll-hint{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;z-index:20;transition:opacity .8s;pointer-events:none;}
-#scroll-hint span{font-size:.6rem;color:var(--text3);letter-spacing:.18em;text-transform:uppercase;}
-.hint-bar{width:1px;height:40px;background:linear-gradient(to bottom,var(--maroon),transparent);animation:hint-p 2.2s ease-in-out infinite;transform-origin:top;}
+.prog-wrap.done .prog-dot{background:var(--maroon);opacity:.4;}
+
+/* ─ LABELS ─ */
+#bldg-label{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);background:rgba(140,28,44,.78);backdrop-filter:blur(8px);color:rgba(255,255,255,.95);font-family:'Montserrat',sans-serif;font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;padding:.24rem .82rem;z-index:20;pointer-events:none;white-space:nowrap;font-weight:600;}
+#scroll-hint{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.42rem;z-index:20;transition:opacity .8s;pointer-events:none;}
+#scroll-hint span{font-family:'Montserrat',sans-serif;font-size:.55rem;color:var(--text3);letter-spacing:.18em;text-transform:uppercase;font-weight:500;}
+.hint-bar{width:1px;height:34px;background:linear-gradient(to bottom,var(--maroon),transparent);animation:hint-p 2.2s ease-in-out infinite;transform-origin:top;}
 @keyframes hint-p{0%,100%{transform:scaleY(1);opacity:.8;}50%{transform:scaleY(.35);opacity:.2;}}
-#done-banner{position:fixed;bottom:128px;left:50%;transform:translateX(-50%) translateY(120%);background:var(--maroon);color:white;font-family:'Playfair Display',serif;font-size:clamp(.7rem,1.5vw,.88rem);font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.75rem 2rem;z-index:20;transition:transform .6s cubic-bezier(.16,1,.3,1);pointer-events:none;white-space:nowrap;}
+#done-banner{position:fixed;bottom:118px;left:50%;transform:translateX(-50%) translateY(130%);background:var(--maroon);backdrop-filter:blur(8px);color:white;font-family:'Montserrat',sans-serif;font-size:clamp(.65rem,1.3vw,.82rem);font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1.8rem;z-index:20;transition:transform .6s cubic-bezier(.16,1,.3,1);pointer-events:none;white-space:nowrap;}
 #done-banner.vis{transform:translateX(-50%) translateY(0);}
-/* CONDITION MARKERS */
-.cm{position:fixed;width:12px;height:12px;border-radius:50%;background:#D43020;border:2px solid white;box-shadow:0 0 10px rgba(212,48,32,.7);z-index:15;pointer-events:none;opacity:0;transition:opacity .4s;animation:cm-p 1.8s ease-in-out infinite;}
-@keyframes cm-p{0%,100%{transform:scale(1);}50%{transform:scale(1.5);box-shadow:0 0 18px rgba(212,48,32,.9);}}
+
+/* ─ CONDITION MARKERS ─ */
+.cm{position:fixed;width:11px;height:11px;border-radius:50%;background:#D43020;border:2px solid white;box-shadow:0 0 10px rgba(212,48,32,.7);z-index:15;pointer-events:none;opacity:0;transition:opacity .4s;animation:cm-p 1.8s ease-in-out infinite;}
+@keyframes cm-p{0%,100%{transform:scale(1);}50%{transform:scale(1.5);}}
 .cm.show{opacity:1;}
-.cm-lbl{position:fixed;background:rgba(212,48,32,.9);color:white;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;padding:.12rem .4rem;pointer-events:none;z-index:15;white-space:nowrap;font-weight:500;opacity:0;transition:opacity .4s;}
+.cm-lbl{position:fixed;background:rgba(212,48,32,.88);backdrop-filter:blur(4px);color:white;font-family:'Montserrat',sans-serif;font-size:.46rem;letter-spacing:.1em;text-transform:uppercase;padding:.1rem .36rem;pointer-events:none;z-index:15;white-space:nowrap;font-weight:600;opacity:0;transition:opacity .4s;}
 .cm-lbl.show{opacity:1;}
-/* ARCH ANNOTATIONS */
+
+/* ─ ARCH ANNOTATIONS ─ */
 .aa{position:fixed;pointer-events:none;z-index:15;opacity:0;transition:opacity .4s;}
 .aa.show{opacity:1;}
-.aa-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);border:2px solid white;}
-.aa-line{width:26px;height:1.5px;background:var(--blue);margin-left:7px;margin-top:-4px;}
-.aa-txt{font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);background:rgba(253,250,245,.94);border:1px solid rgba(30,68,160,.22);padding:.14rem .42rem;white-space:nowrap;font-weight:500;margin-top:2px;}
+.aa-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);border:2px solid white;}
+.aa-line{width:22px;height:1.5px;background:var(--blue);margin-left:6px;margin-top:-3px;}
+.aa-txt{font-family:'Montserrat',sans-serif;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);background:rgba(253,250,245,.92);backdrop-filter:blur(6px);border:1px solid rgba(30,68,160,.2);padding:.1rem .36rem;white-space:nowrap;font-weight:600;margin-top:2px;}
 
-/* ===== BEFORE / AFTER SPLIT OVERLAY ===== */
-#split-overlay{
-  position:fixed;
-  inset:62px 0 112px 0;
-  z-index:18;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .5s;
-  overflow:hidden;
-}
+/* ─ SPLIT OVERLAY ─ */
+#split-overlay{position:fixed;inset:56px 0 106px 0;z-index:18;pointer-events:none;opacity:0;transition:opacity .5s;overflow:hidden;}
 #split-overlay.show{opacity:1;pointer-events:all;}
+#sl-lbl-l{position:absolute;top:12px;left:14px;background:rgba(253,250,245,.86);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.5);font-family:'Montserrat',sans-serif;font-size:.52rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);padding:.22rem .7rem;pointer-events:none;z-index:2;white-space:nowrap;}
+#sl-lbl-r{position:absolute;top:12px;right:14px;background:rgba(140,28,44,.85);backdrop-filter:blur(10px);font-family:'Montserrat',sans-serif;font-size:.52rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:white;padding:.22rem .7rem;pointer-events:none;z-index:2;white-space:nowrap;}
+#overlay-hide-btn{position:absolute;bottom:12px;right:14px;background:rgba(253,250,245,.88);backdrop-filter:blur(10px);border:1.5px solid var(--beige2);display:flex;align-items:center;gap:.38rem;padding:.24rem .65rem;cursor:pointer;z-index:3;font-family:'Montserrat',sans-serif;font-size:.52rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);transition:all .2s;pointer-events:all;white-space:nowrap;}
+#overlay-hide-btn:hover{border-color:var(--maroon);color:var(--maroon);}
+#overlay-hide-btn svg{width:13px;height:13px;flex-shrink:0;}
+#sl-drag-hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:'Montserrat',sans-serif;font-size:.5rem;color:white;letter-spacing:.14em;text-transform:uppercase;background:rgba(26,12,6,.5);backdrop-filter:blur(6px);padding:.18rem .68rem;pointer-events:none;z-index:2;white-space:nowrap;transition:opacity .8s;font-weight:500;}
+#sl-div{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:48px;cursor:ew-resize;z-index:3;display:flex;align-items:center;justify-content:center;}
+#sl-div::before{content:'';position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:2.5px;background:white;box-shadow:0 0 14px rgba(0,0,0,.28);}
+#sl-div::after{content:'';position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:2.5px;background:linear-gradient(to bottom,var(--maroon) 0%,transparent 8%,transparent 92%,var(--maroon) 100%);pointer-events:none;}
+#sl-handle{width:44px;height:44px;background:white;border-radius:50%;box-shadow:0 3px 16px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;position:relative;z-index:1;cursor:ew-resize;transition:transform .15s;}
+#sl-handle:active{transform:scale(1.08);}
 
-/* Left label */
-#sl-lbl-l{
-  position:absolute;
-  top:14px; left:16px;
-  background:rgba(253,250,245,.94);
-  border:1.5px solid var(--beige2);
-  font-size:.58rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--text2); padding:.28rem .9rem;
-  pointer-events:none; z-index:2; white-space:nowrap;
-}
-/* Right label */
-#sl-lbl-r{
-  position:absolute;
-  top:14px; right:16px;
-  background:var(--maroon);
-  font-size:.58rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
-  color:white; padding:.28rem .9rem;
-  pointer-events:none; z-index:2; white-space:nowrap;
-}
-/* Drag hint that fades after first drag */
-#sl-drag-hint{
-  position:absolute;
-  bottom:18px; left:50%; transform:translateX(-50%);
-  font-size:.56rem; color:white; letter-spacing:.14em; text-transform:uppercase;
-  background:rgba(26,12,6,.55); padding:.22rem .75rem;
-  pointer-events:none; z-index:2; white-space:nowrap;
-  transition:opacity .8s;
-}
-/* Vertical divider */
-#sl-div{
-  position:absolute;
-  top:0; bottom:0;
-  left:50%;
-  transform:translateX(-50%);
-  width:44px;       /* wide hit target */
-  cursor:ew-resize;
-  z-index:3;
-  display:flex; align-items:center; justify-content:center;
-}
-/* The visible line */
-#sl-div::before{
-  content:'';
-  position:absolute;
-  top:0; bottom:0;
-  left:50%; transform:translateX(-50%);
-  width:3px;
-  background:white;
-  box-shadow:0 0 16px rgba(0,0,0,.35), 0 0 4px rgba(0,0,0,.2);
-}
-/* Handle circle */
-#sl-handle{
-  width:48px; height:48px;
-  background:white;
-  border-radius:50%;
-  box-shadow:0 3px 18px rgba(0,0,0,.22), 0 1px 6px rgba(0,0,0,.14);
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0;
-  position:relative; z-index:1;
-  cursor:ew-resize;
-  transition:transform .15s, box-shadow .15s;
-}
-#sl-handle:active{transform:scale(1.08);box-shadow:0 4px 22px rgba(0,0,0,.28);}
-#sl-handle svg{display:block;}
-/* Thin maroon rule at top and bottom of the divider line */
-#sl-div::after{
-  content:'';
-  position:absolute;
-  top:0; bottom:0;
-  left:50%; transform:translateX(-50%);
-  width:3px;
-  background:linear-gradient(to bottom,var(--maroon) 0%,transparent 6%,transparent 94%,var(--maroon) 100%);
-  pointer-events:none;
-}
-
-/* NAV */
-#nav{position:fixed;bottom:36px;left:0;right:0;height:76px;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);border-top:1.5px solid var(--beige2);display:flex;align-items:center;justify-content:space-around;z-index:60;box-shadow:0 -2px 14px rgba(26,12,6,.06);}
-.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.18rem;background:none;border:none;cursor:pointer;padding:.5rem 0;color:var(--text3);transition:color .2s;position:relative;pointer-events:all;}
-.nbtn::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:2.5px;background:var(--maroon);transition:width .3s;}
+/* ─ BOTTOM NAV ─ */
+#nav{position:fixed;bottom:32px;left:0;right:0;height:74px;background:rgba(255,255,255,.82);backdrop-filter:blur(24px) saturate(1.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);border-top:1px solid rgba(255,255,255,.52);box-shadow:0 -2px 20px rgba(26,12,6,.07),inset 0 1px 0 rgba(255,255,255,.6);display:flex;align-items:center;justify-content:space-around;z-index:60;}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:.12rem;background:none;border:none;cursor:pointer;padding:.44rem .1rem;color:var(--text3);transition:color .2s;position:relative;pointer-events:all;}
+.nbtn::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:2.5px;background:var(--maroon);transition:width .28s;}
 .nbtn.active{color:var(--maroon);}
-.nbtn.active::before{width:32px;}
-.n-icon{font-size:1.22rem;}
-.n-lbl{font-size:.58rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;}
-/* FOOTER */
-#ftr{position:fixed;bottom:0;left:0;right:0;height:36px;background:var(--maroon-d);color:rgba(255,255,255,.65);display:flex;align-items:center;justify-content:center;font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;z-index:60;gap:.5rem;}
-#ftr strong{color:rgba(255,255,255,.95);font-weight:600;}
+.nbtn.active::before{width:28px;}
+.n-icon-wrap{width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.n-icon-wrap svg{width:20px;height:20px;}
+.n-lbl{font-family:'Montserrat',sans-serif;font-size:.52rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+
+/* ─ FOOTER ─ */
+#ftr{position:fixed;bottom:0;left:0;right:0;height:32px;background:rgba(106,18,32,.95);backdrop-filter:blur(10px);color:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;z-index:60;gap:.4rem;font-weight:500;}
+#ftr strong{color:rgba(255,255,255,.92);font-weight:700;}
 #ftr .sep{opacity:.3;}
-@media(max-width:520px){.brand-name{display:none;}.bldg-tab{padding:.35rem .55rem;font-size:.62rem;}#prog-sidebar{display:none;}.ph-panel{width:calc(100vw - 2rem);}.n-lbl{font-size:.54rem;}}
+
+/* ─ AR OVERLAY ─ */
+#ar-overlay{position:fixed;inset:0;z-index:100;background:rgba(26,12,6,.72);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;}
+#ar-overlay.show{display:flex;}
+#ar-card{background:rgba(253,250,245,.95);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.6);box-shadow:0 20px 60px rgba(26,12,6,.18);width:min(340px,90vw);padding:0;overflow:hidden;}
+#ar-card-head{background:var(--maroon);color:white;padding:1.1rem 1.2rem .9rem;display:flex;align-items:flex-start;justify-content:space-between;}
+#ar-card-head svg{width:28px;height:28px;opacity:.9;flex-shrink:0;margin-right:.75rem;}
+#ar-head-text{flex:1;}
+#ar-card-title{font-family:'Montserrat',sans-serif;font-size:1rem;font-weight:800;letter-spacing:-.01em;}
+#ar-card-sub{font-family:'Montserrat',sans-serif;font-size:.58rem;opacity:.65;margin-top:.15rem;font-weight:400;}
+#ar-close-btn{background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:.9rem;line-height:1;padding:0 0 .3rem .5rem;transition:color .2s;}
+#ar-close-btn:hover{color:white;}
+#ar-card-body{padding:1.1rem 1.2rem;}
+#ar-msg-body{font-family:'Montserrat',sans-serif;font-size:.74rem;color:var(--text);line-height:1.7;font-weight:400;}
+#ar-hint{font-family:'Montserrat',sans-serif;font-size:.62rem;color:var(--text3);margin-top:.75rem;padding:.6rem .75rem;background:rgba(140,28,44,.06);border-left:2px solid var(--maroon);font-weight:500;line-height:1.5;}
+#ar-dismiss{display:block;width:100%;margin-top:1rem;background:var(--maroon);color:white;border:none;padding:.65rem;font-family:'Montserrat',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+#ar-dismiss:hover{background:var(--maroon-d);}
+
+/* ─ MOBILE ─ */
+@media(max-width:640px){
+  .brand-name{display:none;}
+  .bldg-tab{padding:.28rem .48rem;font-size:.58rem;}
+  #ar-btn{padding:.28rem .5rem;font-size:.56rem;}
+  #prog-sidebar{display:none;}
+  .ph-panel{left:0!important;right:0;width:100%!important;top:auto!important;bottom:106px;transform:translateY(100%)!important;border-left:none!important;border-top:3px solid var(--maroon);max-height:44vh;overflow-y:auto;}
+  .ph-panel.vis{transform:translateY(0)!important;}
+  #sl-lbl-l,#sl-lbl-r{font-size:.48rem;padding:.18rem .5rem;}
+  #sl-handle{width:40px;height:40px;}
+  .n-lbl{font-size:.48rem;}
+  .n-icon-wrap svg{width:18px;height:18px;}
+  #ftr .sep:first-of-type{display:none;}
+  #ftr span:nth-child(4),#ftr span:nth-child(5){display:none;}
+}
+@media(max-width:380px){
+  .n-lbl{display:none;}
+  .nbtn{padding:.54rem .1rem;}
+  #ar-btn span{display:none;}
+}
 </style>
 </head>
 <body>
@@ -193,6 +213,7 @@ canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block
 <div id="scroll-body"></div>
 <div id="gpb"></div>
 
+<!-- HEADER -->
 <header id="hdr">
   <div class="brand">
     <div class="logo">
@@ -202,41 +223,38 @@ canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block
         <path d="M11 4v8M4 8l7 4 7-4" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
       </svg>
     </div>
-    <div>
+    <div class="brand-texts">
       <div class="brand-name">University of San Agustin</div>
       <div class="brand-sub">Heritage AR Demo</div>
     </div>
   </div>
-  <div class="bldg-tabs">
+  <div class="hdr-right">
     <button class="bldg-tab active" data-b="herrera">Herrera Hall</button>
     <button class="bldg-tab" data-b="dolce">Dolce Garcia Hall</button>
+    <button id="ar-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span>AR</span>
+    </button>
   </div>
 </header>
 
-<div class="ar-frame">
-  <div class="arc tl"></div><div class="arc tr"></div>
-  <div class="arc bl"></div><div class="arc br"></div>
-</div>
-
 <div id="mode-badge">Scroll to Begin</div>
 
-<!-- Phase panels -->
+<!-- PHASE PANELS -->
 <div class="ph-panel" id="pp0">
   <div class="ph-head">
     <div class="ph-num">Phase 01 &mdash; Historical Documentation</div>
-    <span class="ph-icon">&#127963;</span>
-    <div class="ph-title">Historical Value</div>
+    <div class="ph-icon-row">
+      <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21H3V10.5z"/><rect x="9" y="14" width="6" height="7"/></svg>
+      <div class="ph-title">Historical Value</div>
+    </div>
     <div class="ph-sub" id="pp0-sub">Herrera Hall &middot; c.&nbsp;1946&ndash;1948</div>
   </div>
   <div class="ph-body">
     <ul class="ph-items" id="pp0-items"></ul>
     <div class="ph-divider"></div>
-    <div style="font-size:.58rem;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.45rem;font-weight:500;">Augustinian Values</div>
-    <div class="ph-values">
-      <div class="value-chip">Unitas</div>
-      <div class="value-chip">Caritas</div>
-      <div class="value-chip">Veritas</div>
-    </div>
+    <div class="ph-sect-lbl">Augustinian Values</div>
+    <div class="ph-values"><div class="value-chip">Unitas</div><div class="value-chip">Caritas</div><div class="value-chip">Veritas</div></div>
     <div class="ph-stats">
       <div class="ph-stat"><div class="st-val" id="pp0-y"></div><div class="st-key">Year built</div></div>
       <div class="ph-stat"><div class="st-val">OSA</div><div class="st-key">Order</div></div>
@@ -248,8 +266,10 @@ canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block
 <div class="ph-panel" id="pp1">
   <div class="ph-head">
     <div class="ph-num">Phase 02 &mdash; Architectural Survey</div>
-    <span class="ph-icon">&#128202;</span>
-    <div class="ph-title">Architectural Value</div>
+    <div class="ph-icon-row">
+      <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 3v18"/><circle cx="15" cy="15" r="2"/></svg>
+      <div class="ph-title">Architectural Value</div>
+    </div>
     <div class="ph-sub">Neoclassical Institutional Style</div>
   </div>
   <div class="ph-body">
@@ -262,15 +282,17 @@ canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block
 <div class="ph-panel" id="pp2">
   <div class="ph-head">
     <div class="ph-num">Phase 03 &mdash; Condition Assessment</div>
-    <span class="ph-icon">&#9888;</span>
-    <div class="ph-title">Condition Monitoring</div>
+    <div class="ph-icon-row">
+      <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 20h18L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17.5" r=".8" fill="white"/></svg>
+      <div class="ph-title">Condition Monitoring</div>
+    </div>
     <div class="ph-sub">Structural &amp; Material Assessment</div>
   </div>
   <div class="ph-body">
     <ul class="ph-items" id="pp2-items"></ul>
     <div class="ph-divider"></div>
     <div class="ph-extra" id="pp2-extra"></div>
-    <div class="ph-stats" style="margin-top:.75rem">
+    <div class="ph-stats" style="margin-top:.6rem">
       <div class="ph-stat"><div class="st-val">3</div><div class="st-key">Issues tracked</div></div>
       <div class="ph-stat"><div class="st-val">Active</div><div class="st-key">Monitoring</div></div>
     </div>
@@ -280,27 +302,30 @@ canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block
 <div class="ph-panel" id="pp3">
   <div class="ph-head">
     <div class="ph-num">Phase 04 &mdash; Conservation Design</div>
-    <span class="ph-icon">&#128300;</span>
-    <div class="ph-title" id="pp3-title">Future Overlay</div>
-    <div class="ph-sub">Drag the divider to compare</div>
+    <div class="ph-icon-row">
+      <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5L12 2z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <div class="ph-title" id="pp3-title">Future Overlay</div>
+    </div>
+    <div class="ph-sub">Drag divider &mdash; compare existing vs future</div>
   </div>
   <div class="ph-body">
     <ul class="ph-items" id="pp3-items"></ul>
     <div class="ph-divider"></div>
     <div class="ph-extra" id="pp3-extra"></div>
-    <div class="ph-stats" style="margin-top:.75rem">
+    <div class="ph-stats" style="margin-top:.6rem">
       <div class="ph-stat"><div class="st-val">LEED</div><div class="st-key">Target cert.</div></div>
       <div class="ph-stat"><div class="st-val">Adaptive</div><div class="st-key">Reuse type</div></div>
     </div>
   </div>
 </div>
 
+<!-- PROGRESS SIDEBAR -->
 <nav id="prog-sidebar">
   <div class="prog-wrap"><div class="prog-lbl">History</div><div class="prog-dot"></div></div>
   <div class="prog-line"></div>
   <div class="prog-wrap"><div class="prog-lbl">Arch.</div><div class="prog-dot"></div></div>
   <div class="prog-line"></div>
-  <div class="prog-wrap"><div class="prog-lbl">Condition</div><div class="prog-dot"></div></div>
+  <div class="prog-wrap"><div class="prog-lbl">Cond.</div><div class="prog-dot"></div></div>
   <div class="prog-line"></div>
   <div class="prog-wrap"><div class="prog-lbl">Future</div><div class="prog-dot"></div></div>
 </nav>
@@ -309,7 +334,7 @@ canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block
 <div id="scroll-hint"><span>Scroll to begin</span><div class="hint-bar"></div></div>
 <div id="done-banner">&#10022; Conservation Design Complete &mdash; Herrera Hall</div>
 
-<!-- Condition markers -->
+<!-- CONDITION MARKERS -->
 <div class="cm" id="cm0" style="left:36%;top:32%;"></div>
 <div class="cm-lbl" id="cml0" style="left:37%;top:36%;">Structural crack</div>
 <div class="cm" id="cm1" style="left:56%;top:44%;"></div>
@@ -317,32 +342,49 @@ canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block
 <div class="cm" id="cm2" style="left:44%;top:62%;"></div>
 <div class="cm-lbl" id="cml2" style="left:45%;top:66%;">Material decay</div>
 
-<!-- Arch annotations -->
+<!-- ARCH ANNOTATIONS -->
 <div class="aa" id="aa0" style="left:20%;top:38%"><div class="aa-dot"></div><div class="aa-line"></div><div class="aa-txt">Neoclassical pediment</div></div>
 <div class="aa" id="aa1" style="left:64%;top:50%"><div class="aa-dot"></div><div class="aa-line"></div><div class="aa-txt">Colonnade rhythm</div></div>
 <div class="aa" id="aa2" style="left:38%;top:70%"><div class="aa-dot"></div><div class="aa-line"></div><div class="aa-txt">Masonry plinth</div></div>
 
-<!-- Before/After split overlay -->
+<!-- SPLIT OVERLAY -->
 <div id="split-overlay">
   <div id="sl-lbl-l">&#9632; Existing</div>
   <div id="sl-lbl-r">Future Overlay &#9632;</div>
+  <button id="overlay-hide-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    <span id="ohb-label">Hide overlay</span>
+  </button>
   <div id="sl-drag-hint">&#8592; Drag to compare &#8594;</div>
   <div id="sl-div">
     <div id="sl-handle">
-      <svg width="24" height="20" viewBox="0 0 24 20" fill="none">
-        <path d="M9 10L5 6M9 10L5 14" stroke="#8C1C2C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M15 10L19 6M15 10L19 14" stroke="#8C1C2C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="12" y1="2" x2="12" y2="18" stroke="#8C1C2C" stroke-width="1.8" stroke-linecap="round"/>
+      <svg width="22" height="18" viewBox="0 0 22 18" fill="none">
+        <path d="M8 9L4 5M8 9L4 13" stroke="#8C1C2C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M14 9L18 5M14 9L18 13" stroke="#8C1C2C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="11" y1="2" x2="11" y2="16" stroke="#8C1C2C" stroke-width="1.8" stroke-linecap="round"/>
       </svg>
     </div>
   </div>
 </div>
 
+<!-- BOTTOM NAV -->
 <nav id="nav">
-  <button class="nbtn" data-m="history" data-t="0.22"><span class="n-icon">&#127963;</span><span class="n-lbl">History</span></button>
-  <button class="nbtn" data-m="architecture" data-t="0.44"><span class="n-icon">&#128202;</span><span class="n-lbl">Architecture</span></button>
-  <button class="nbtn" data-m="condition" data-t="0.64"><span class="n-icon">&#9888;</span><span class="n-lbl">Condition</span></button>
-  <button class="nbtn" data-m="future" data-t="0.82"><span class="n-icon">&#128300;</span><span class="n-lbl">Future</span></button>
+  <button class="nbtn" data-m="history" data-t="0.22">
+    <div class="n-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21H3V10.5z"/><rect x="9" y="14" width="6" height="7"/></svg></div>
+    <span class="n-lbl">History</span>
+  </button>
+  <button class="nbtn" data-m="architecture" data-t="0.44">
+    <div class="n-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 3v18"/><circle cx="15" cy="15" r="2"/></svg></div>
+    <span class="n-lbl">Architecture</span>
+  </button>
+  <button class="nbtn" data-m="condition" data-t="0.64">
+    <div class="n-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 20h18L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17.5" r=".8" fill="currentColor"/></svg></div>
+    <span class="n-lbl">Condition</span>
+  </button>
+  <button class="nbtn" data-m="future" data-t="0.82">
+    <div class="n-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5L12 2z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+    <span class="n-lbl">Future</span>
+  </button>
 </nav>
 
 <footer id="ftr">
@@ -353,23 +395,40 @@ canvas#c{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block
   Heritage Conservation AR Demo
 </footer>
 
+<!-- AR OVERLAY -->
+<div id="ar-overlay">
+  <div id="ar-card">
+    <div id="ar-card-head">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <div id="ar-head-text">
+        <div id="ar-card-title">Augmented Reality</div>
+        <div id="ar-card-sub">Heritage AR View</div>
+      </div>
+      <button id="ar-close-btn">&#10005;</button>
+    </div>
+    <div id="ar-card-body">
+      <p id="ar-msg-body">Checking AR support on this device...</p>
+      <div id="ar-hint">Best experience: Chrome on Android with ARCore support. Point camera at a flat surface, then tap to place the building.</div>
+      <button id="ar-dismiss">Close</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ── DATA ─────────────────────────────────────────────
 const DATA={
-  herrera:{
-    name:'Herrera Hall',year:'c.\u20091946\u20131948',
+  herrera:{name:'Herrera Hall',year:'c.\u20091946\u20131948',
     history:['Built during <strong>post-war reconstruction (c.\u20091946\u20131948)</strong>','Symbol of resilience and rebuilding of the University','Named after <strong>Fray Diego de Herrera, OSA</strong>','Core academic building of University of San Agustin'],
     architecture:{items:['<strong>Neoclassical symmetry</strong> and proportion throughout the facade','Durable masonry and concrete construction','Strong facade: columns, pediment, cornice rhythm','Landmark within the campus axial composition'],extra:'The colonnade, cornice, and pediment express a classical institutional character consistent with Augustinian academic tradition.'},
-    condition:{items:['Track <strong>structural cracks</strong> in load-bearing members','Monitor <strong>moisture damage</strong> and water infiltration at joints','Assess <strong>material decay</strong> in facade masonry and trim'],extra:'Systematic monitoring required to guide conservation priorities and preserve the heritage fabric of this post-war landmark.'},
-    future:{title:'Future Overlay',items:['Proposed adaptive reuse and heritage conservation design','Retention of character-defining facade elements','Contemporary interior upgrades with minimal intrusion','New academic spaces integrated sensitively within existing envelope'],extra:'Drag the divider left and right to compare the existing building against the proposed conservation overlay.'}
+    condition:{items:['Track <strong>structural cracks</strong> in load-bearing members','Monitor <strong>moisture damage</strong> and water infiltration at joints','Assess <strong>material decay</strong> in facade masonry and trim'],extra:'Systematic monitoring required to guide conservation priorities and preserve the heritage fabric.'},
+    future:{title:'Future Overlay',items:['Proposed adaptive reuse and heritage conservation design','Retention of character-defining facade elements','Contemporary interior upgrades with minimal intrusion','New academic spaces integrated within existing envelope'],extra:'Drag the divider left and right to compare the existing building against the proposed conservation overlay.'}
   },
-  dolce:{
-    name:'Dolce Garcia Hall',year:'c.\u2009late\u00a01940s\u20131950s',
+  dolce:{name:'Dolce Garcia Hall',year:'c.\u2009late\u00a01940s\u20131950s',
     history:['Built during <strong>post-war expansion (late 1940s\u20131950s)</strong>','Represents continued growth of Augustinian education','Named after <strong>Fray Jose Dolce Garcia, OSA</strong>','Key academic facility of University of San Agustin'],
-    architecture:{items:['Institutional <strong>neoclassical influence</strong> with simplified detailing','Harmonizes with Herrera Hall in scale and proportion','Functional academic layout with repetitive structural bays','Reinforces visual continuity of the heritage core'],extra:'The simplified detailing of Dolce Garcia Hall complements Herrera Hall, forming a coherent heritage streetscape.'},
-    condition:{items:['Monitor <strong>structural integrity</strong> of key load-bearing elements','Inspect <strong>moisture intrusion</strong> at wall junctions and openings','Assess <strong>surface deterioration</strong> of masonry facade'],extra:'A condition survey aligned with the broader campus heritage conservation programme is recommended.'},
-    future:{title:'Future Overlay \u2014 Adaptive Reuse',items:['<strong>Adaptive reuse</strong> supporting evolving academic and administrative functions','Restoration of heritage facade elements','New interior organisation for contemporary academic needs','Landscaping improvements to reinforce campus heritage setting'],extra:'Drag the divider left and right to compare the existing building against the proposed adaptive reuse overlay.'}
+    architecture:{items:['Institutional <strong>neoclassical influence</strong> with simplified detailing','Harmonizes with Herrera Hall in scale and proportion','Functional academic layout with repetitive structural bays','Reinforces visual continuity of the heritage core'],extra:'The simplified detailing complements Herrera Hall, forming a coherent heritage streetscape.'},
+    condition:{items:['Monitor <strong>structural integrity</strong> of key load-bearing elements','Inspect <strong>moisture intrusion</strong> at wall junctions','Assess <strong>surface deterioration</strong> of masonry facade'],extra:'A condition survey aligned with the broader campus heritage conservation programme is recommended.'},
+    future:{title:'Future Overlay \u2014 Adaptive Reuse',items:['<strong>Adaptive reuse</strong> supporting evolving academic and administrative functions','Restoration of heritage facade elements','New interior organisation for contemporary academic needs','Landscaping improvements to reinforce campus heritage setting'],extra:'Drag the divider to compare the existing building against the proposed adaptive reuse overlay.'}
   }
 };
 
@@ -396,29 +455,28 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.setClearColor(0xF2EDE5,1);
-renderer.autoClear=false;  // we manage clearing manually for split render
+renderer.setClearColor(0xF0EBE2,1);
+renderer.autoClear=false;
 
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0xF2EDE5);
-scene.fog=new THREE.Fog(0xF2EDE5,45,95);
-const camera=new THREE.PerspectiveCamera(38,window.innerWidth/window.innerHeight,0.1,200);
+scene.background=new THREE.Color(0xF0EBE2);
+scene.fog=new THREE.Fog(0xF0EBE2,60,120);
+const camera=new THREE.PerspectiveCamera(34,window.innerWidth/window.innerHeight,0.1,300);
 
 scene.add(new THREE.AmbientLight(0xFFF8F2,0.85));
 const sun=new THREE.DirectionalLight(0xFFF5E0,2.2);
 sun.position.set(14,22,10);sun.castShadow=true;
-sun.shadow.camera.left=sun.shadow.camera.bottom=-22;
-sun.shadow.camera.right=sun.shadow.camera.top=22;
+sun.shadow.camera.left=sun.shadow.camera.bottom=-30;
+sun.shadow.camera.right=sun.shadow.camera.top=30;
 sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-0.001;
 scene.add(sun);
 const fill=new THREE.DirectionalLight(0xD0E8F8,0.45);
 fill.position.set(-10,6,-6);scene.add(fill);
 
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(70,70),new THREE.MeshLambertMaterial({color:0xCEC4AE}));
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(90,90),new THREE.MeshLambertMaterial({color:0xCEC4AE}));
 ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-// ground path added below
-const path2=new THREE.Mesh(new THREE.BoxGeometry(8,.06,20),new THREE.MeshLambertMaterial({color:0xBDB4A0}));
-path2.position.set(0,.03,0);scene.add(path2);
+const pathMesh=new THREE.Mesh(new THREE.BoxGeometry(8,.06,24),new THREE.MeshLambertMaterial({color:0xBDB4A0}));
+pathMesh.position.set(0,.03,0);scene.add(pathMesh);
 
 function tmat(o){return new THREE.MeshPhongMaterial({transparent:true,opacity:0,...o});}
 const MT={
@@ -432,13 +490,14 @@ const MT={
 };
 function setOp(g,v){g.traverse(o=>{if(o.isMesh&&o.material.transparent)o.material.opacity=v;});}
 function mk(geo,mat,x,y,z,rx){const o=new THREE.Mesh(geo,mat);o.position.set(x||0,y||0,z||0);if(rx)o.rotation.x=rx;o.castShadow=true;o.receiveShadow=true;return o;}
+
 function makeTree(x,z,h){
   const g=new THREE.Group();
   g.add(mk(new THREE.CylinderGeometry(.11,.16,h*.42,6),new THREE.MeshLambertMaterial({color:0x6B4A28}),0,h*.21,0));
   g.add(mk(new THREE.SphereGeometry(h*.3+.18,7,5),new THREE.MeshLambertMaterial({color:0x4A7038}),0,h*.65,0));
   g.position.set(x,0,z);scene.add(g);
 }
-[[17,-7],[17,7],[-17,-6],[-17,6],[11,-12],[-11,-12],[0,13],[13,10],[-13,10]].forEach(([x,z])=>makeTree(x,z,1.6+Math.random()*1.2));
+[[22,-9],[22,9],[-22,-8],[-22,8],[14,-15],[-14,-15],[0,16],[16,12],[-16,12],[24,2],[-24,2]].forEach(([x,z])=>makeTree(x,z,1.6+Math.random()*1.2));
 
 function buildBuilding(W,H,D){
   const g=new THREE.Group();
@@ -457,10 +516,10 @@ function buildBuilding(W,H,D){
   roofs.add(rfF);roofs.add(rfB);
   roofs.add(mk(new THREE.BoxGeometry(W+1.6,.38,1.6),MT.roof(),0,H+2.08,0));
   [-(W/2+1.4),(W/2+1.4)].forEach(wx=>{
-    const a=mk(new THREE.BoxGeometry(3.8+.4,.28,4.2),MT.roof(),wx,H+.7,-2);a.rotation.x=0.32;
-    const b=mk(new THREE.BoxGeometry(3.8+.4,.28,4.2),MT.roof(),wx,H+.7,2);b.rotation.x=-0.32;
+    const a=mk(new THREE.BoxGeometry(4.2,.28,4.2),MT.roof(),wx,H+.7,-2);a.rotation.x=0.32;
+    const b=mk(new THREE.BoxGeometry(4.2,.28,4.2),MT.roof(),wx,H+.7,2);b.rotation.x=-0.32;
     roofs.add(a);roofs.add(b);
-    roofs.add(mk(new THREE.BoxGeometry(3.8+.4,.3,1.2),MT.roof(),wx,H+1.7,0));
+    roofs.add(mk(new THREE.BoxGeometry(4.2,.3,1.2),MT.roof(),wx,H+1.7,0));
   });
   g.add(roofs);
   const facade=new THREE.Group();
@@ -483,8 +542,8 @@ function buildBuilding(W,H,D){
 
 function buildFuture(W,H,D,wing){
   const g=new THREE.Group();
-  const fm=new THREE.MeshPhongMaterial({color:0xBB2030,transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false});
-  const em=new THREE.LineBasicMaterial({color:0xEE2040,linewidth:1.5});
+  const fm=new THREE.MeshPhongMaterial({color:0xCC2030,transparent:true,opacity:.05,side:THREE.DoubleSide,depthWrite:false});
+  const em=new THREE.LineBasicMaterial({color:0xFF2244,linewidth:2});
   g.add(mk(new THREE.BoxGeometry(W+.6,H+1.2,D+.6),fm,0,(H+1.2)/2+.3,0));
   const env=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(W+.6,H+1.2,D+.6)),em);
   env.position.set(0,(H+1.2)/2+.3,0);g.add(env);
@@ -509,44 +568,156 @@ const dG=buildBuilding(14,4.5,9);dG.visible=false;scene.add(dG);
 const dFut=buildFuture(14,4.5,9,false);scene.add(dFut);
 const dArch=buildEdges(14,4.5,9);scene.add(dArch);
 
-// ── SPLIT OVERLAY DRAG ────────────────────────────────
-let divX=0.5;  // 0..1
-let divDragging=false;
+// ── AR ────────────────────────────────────────────────
+const arBtn=document.getElementById('ar-btn');
+const arOverlay=document.getElementById('ar-overlay');
+const arMsgBody=document.getElementById('ar-msg-body');
+
+function showArOverlay(msg){arMsgBody.textContent=msg;arOverlay.classList.add('show');}
+function closeAr(){arOverlay.classList.remove('show');}
+document.getElementById('ar-close-btn').addEventListener('click',closeAr);
+document.getElementById('ar-dismiss').addEventListener('click',closeAr);
+
+arBtn.addEventListener('click',async()=>{
+  if(!navigator.xr){
+    showArOverlay('WebXR is not supported in this browser. For AR, open this page in Chrome on an Android device with ARCore support.');
+    return;
+  }
+  let supported=false;
+  try{supported=await navigator.xr.isSessionSupported('immersive-ar');}catch(e){supported=false;}
+  if(!supported){
+    showArOverlay('AR is not supported on this device. WebXR Augmented Reality requires ARCore on Android (Chrome) or ARKit on iOS 17+ Safari.');
+    return;
+  }
+  try{
+    renderer.xr.enabled=true;
+    const session=await navigator.xr.requestSession('immersive-ar',{
+      requiredFeatures:['hit-test'],
+      optionalFeatures:['dom-overlay'],
+      domOverlay:{root:document.body}
+    });
+    renderer.xr.setSession(session);
+
+    // Show current building fully for AR
+    const activeG=curBldg==='herrera'?hG:dG;
+    activeG.scale.setScalar(0.022);
+    activeG.position.set(0,0,0);
+    setOp(activeG.userData.structs,1);
+    setOp(activeG.userData.roofs,1);
+    setOp(activeG.userData.facade,1);
+
+    // Reticle for surface detection
+    const reticle=new THREE.Mesh(
+      new THREE.RingGeometry(.055,.07,32),
+      new THREE.MeshBasicMaterial({color:0x8C1C2C,side:THREE.DoubleSide})
+    );
+    reticle.rotation.x=-Math.PI/2;reticle.visible=false;scene.add(reticle);
+
+    let hitSrc=null,srcReq=false,placed=false;
+    const ctrl=renderer.xr.getController(0);
+    ctrl.addEventListener('select',()=>{
+      if(reticle.visible&&!placed){
+        activeG.position.copy(reticle.position);placed=true;reticle.visible=false;
+      }
+    });
+    scene.add(ctrl);
+
+    session.addEventListener('end',()=>{
+      renderer.xr.enabled=false;
+      activeG.scale.setScalar(1);
+      activeG.position.set(0,0,0);
+      scene.remove(reticle);scene.remove(ctrl);
+      hitSrc=null;srcReq=false;placed=false;
+      renderer.setAnimationLoop(null);
+      updateScene(currentT); // restore material opacities to scroll state
+    });
+
+    renderer.setAnimationLoop((ts,frame)=>{
+      if(!frame)return;
+      const refSp=renderer.xr.getReferenceSpace();
+      const sess=renderer.xr.getSession();
+      if(!srcReq){
+        sess.requestReferenceSpace('viewer').then(vs=>{sess.requestHitTestSource({space:vs}).then(s=>hitSrc=s);});
+        srcReq=true;
+      }
+      if(hitSrc&&!placed){
+        const hits=frame.getHitTestResults(hitSrc);
+        if(hits.length>0){
+          reticle.visible=true;
+          const pose=hits[0].getPose(refSp).transform.matrix;
+          reticle.matrix.fromArray(pose);
+          reticle.matrix.decompose(reticle.position,reticle.quaternion,reticle.scale);
+        } else {reticle.visible=false;}
+      }
+      renderer.clear(true,true,true);
+      renderer.setScissorTest(false);
+      renderer.render(scene,camera);
+    });
+  } catch(err){
+    renderer.xr.enabled=false;
+    showArOverlay('Could not start AR session: '+err.message+'. Make sure camera permission is granted.');
+  }
+});
+
+// ── SPLIT DRAG ────────────────────────────────────────
+let divX=0.5,divDragging=false,overlayHidden=false,hintFaded=false;
 const splitOverlay=document.getElementById('split-overlay');
 const slDiv=document.getElementById('sl-div');
 const slHint=document.getElementById('sl-drag-hint');
-let hintFaded=false;
+const ohbLabel=document.getElementById('ohb-label');
 
-function setDivX(px){
-  divX=Math.max(.03,Math.min(.97,px/window.innerWidth));
-  slDiv.style.left=(divX*100)+'%';
-}
-
+function setDivX(px){divX=Math.max(.03,Math.min(.97,px/window.innerWidth));slDiv.style.left=(divX*100)+'%';}
+function fadeDragHint(){if(!hintFaded){hintFaded=true;slHint.style.opacity='0';}}
 slDiv.addEventListener('mousedown',e=>{divDragging=true;e.preventDefault();});
 window.addEventListener('mousemove',e=>{if(!divDragging)return;setDivX(e.clientX);fadeDragHint();});
 window.addEventListener('mouseup',()=>divDragging=false);
 slDiv.addEventListener('touchstart',e=>{divDragging=true;e.preventDefault();},{passive:false});
 window.addEventListener('touchmove',e=>{if(!divDragging)return;setDivX(e.touches[0].clientX);fadeDragHint();},{passive:true});
 window.addEventListener('touchend',()=>divDragging=false);
+document.getElementById('overlay-hide-btn').addEventListener('click',()=>{
+  overlayHidden=!overlayHidden;
+  ohbLabel.textContent=overlayHidden?'Show overlay':'Hide overlay';
+});
 
-function fadeDragHint(){
-  if(!hintFaded){hintFaded=true;slHint.style.opacity='0';}
+// ── CAMERA ORBIT ─── zoomed out, theta-only drag
+let theta=0.65,autoRot=true;
+let camDragging=false,cmx0=0,cmy0=0;
+
+function setCam(t){
+  // Radius starts wide (52) and gently zooms in (30) as user scrolls
+  const rad=(t===undefined)||isNaN(t)?52:52-(52-30)*Math.min(1,t*0.88);
+  // Vertical angle: slightly high angle, scroll lowers it a touch
+  const phi=(t===undefined)||isNaN(t)?0.55:0.55-(0.55-0.48)*Math.min(1,t*0.7);
+  camera.position.x=rad*Math.sin(theta)*Math.sin(phi);
+  camera.position.z=rad*Math.cos(theta)*Math.sin(phi);
+  camera.position.y=rad*Math.cos(phi);
+  camera.lookAt(0,3,0);
 }
 
-// ── CAMERA ORBIT ──────────────────────────────────────
-let theta=0.65,phi=0.62,dragging=false,mx0=0,my0=0,autoRot=true;
-canvas.addEventListener('mousedown',e=>{if(divDragging)return;dragging=true;autoRot=false;mx0=e.clientX;my0=e.clientY;});
-window.addEventListener('mousemove',e=>{if(!dragging||divDragging)return;theta-=(e.clientX-mx0)*.006;phi=Math.max(.2,Math.min(1.35,phi-(e.clientY-my0)*.006));mx0=e.clientX;my0=e.clientY;});
-window.addEventListener('mouseup',()=>{dragging=false;setTimeout(()=>autoRot=true,5000);});
-canvas.addEventListener('touchstart',e=>{if(e.target===slDiv||e.target===document.getElementById('sl-handle'))return;dragging=true;autoRot=false;mx0=e.touches[0].clientX;my0=e.touches[0].clientY;},{passive:true});
-canvas.addEventListener('touchmove',e=>{if(!dragging)return;theta-=(e.touches[0].clientX-mx0)*.006;phi=Math.max(.2,Math.min(1.35,phi-(e.touches[0].clientY-my0)*.006));mx0=e.touches[0].clientX;my0=e.touches[0].clientY;},{passive:true});
-canvas.addEventListener('touchend',()=>{dragging=false;setTimeout(()=>autoRot=true,5000);});
+canvas.addEventListener('mousedown',e=>{if(divDragging)return;camDragging=true;autoRot=false;cmx0=e.clientX;cmy0=e.clientY;});
+window.addEventListener('mousemove',e=>{
+  if(!camDragging||divDragging)return;
+  theta-=(e.clientX-cmx0)*.006;
+  cmx0=e.clientX;cmy0=e.clientY;
+});
+window.addEventListener('mouseup',()=>{camDragging=false;setTimeout(()=>autoRot=true,5000);});
+canvas.addEventListener('touchstart',e=>{
+  if(slDiv.contains(e.target))return;
+  camDragging=true;autoRot=false;
+  cmx0=e.touches[0].clientX;cmy0=e.touches[0].clientY;
+},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  if(!camDragging)return;
+  theta-=(e.touches[0].clientX-cmx0)*.006;
+  cmx0=e.touches[0].clientX;cmy0=e.touches[0].clientY;
+},{passive:true});
+canvas.addEventListener('touchend',()=>{camDragging=false;setTimeout(()=>autoRot=true,5000);});
 
 // ── SCROLL ────────────────────────────────────────────
 let targetT=0,currentT=0;
 window.addEventListener('scroll',()=>{const mx=document.documentElement.scrollHeight-window.innerHeight;targetT=mx>0?window.scrollY/mx:0;},{passive:true});
 
-// ── STATE ─────────────────────────────────────────────
+// ── HELPERS ───────────────────────────────────────────
 let curBldg='herrera';
 const PT=[0.10,0.32,0.56,0.76];
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -556,7 +727,8 @@ const ss=t=>t*t*(3-2*t);
 
 // ── SCENE UPDATE ──────────────────────────────────────
 function updateScene(t){
-  const G   =curBldg==='herrera'?hG:dG;
+  if(renderer.xr.isPresenting)return; // AR handles its own state
+  const G=curBldg==='herrera'?hG:dG;
   const Arch=curBldg==='herrera'?hArch:dArch;
 
   document.getElementById('gpb').style.width=(t*100).toFixed(1)+'%';
@@ -564,33 +736,24 @@ function updateScene(t){
   // Building materialises
   const strT=ss(remap(t,0,.16));
   setOp(G.userData.structs,strT);
-  G.userData.structs.position.y=lerp(-1.8,0,strT);
-  setOp(G.userData.roofs,ss(remap(t,.08,.22)));
-  G.userData.roofs.position.y=lerp(2.5,0,ss(remap(t,.08,.22)));
+  G.userData.structs.position.y=lerp(-2,0,strT);
+  const roofT=ss(remap(t,.08,.22));
+  setOp(G.userData.roofs,roofT);
+  G.userData.roofs.position.y=lerp(3,0,roofT);
   setOp(G.userData.facade,ss(remap(t,.18,.32)));
 
   Arch.visible=t>=PT[1]&&t<PT[2];
 
-  // Background
+  // Scene colours per phase
   let bgHex,fillHex,fillInt;
-  if(t<PT[1]){bgHex=0xF2EDE5;fillHex=0xD0E8F8;fillInt=.45;}
-  else if(t<PT[2]){bgHex=0xECF0F8;fillHex=0xA4C4F8;fillInt=.75;}
+  if(t<PT[1]){bgHex=0xF0EBE2;fillHex=0xD0E8F8;fillInt=.45;}
+  else if(t<PT[2]){bgHex=0xEBEFF8;fillHex=0xA4C4F8;fillInt=.75;}
   else if(t<PT[3]){bgHex=0xF4EDEB;fillHex=0xF8C0A0;fillInt=.55;}
   else{bgHex=0xEEEBF2;fillHex=0xB8C0F0;fillInt=.60;}
   scene.background=new THREE.Color(bgHex);
-  scene.fog=new THREE.Fog(bgHex,45,95);
+  scene.fog=new THREE.Fog(bgHex,60,120);
   renderer.setClearColor(bgHex,1);
-  fill.color.setHex(fillHex);
-  fill.intensity=fillInt;
-
-  // Camera
-  const ang=-.15+t*1.0;
-  const rad=lerp(26,18,t*.85);
-  const cp =lerp(.62,.50,t*.7);
-  camera.position.x=rad*Math.sin(ang)*Math.sin(cp);
-  camera.position.z=rad*Math.cos(ang)*Math.sin(cp);
-  camera.position.y=rad*Math.cos(cp);
-  camera.lookAt(0,2.8,0);
+  fill.color.setHex(fillHex);fill.intensity=fillInt;
 
   // Panels
   document.getElementById('pp0').classList.toggle('vis',t>=PT[0]&&t<PT[1]);
@@ -599,7 +762,7 @@ function updateScene(t){
   document.getElementById('pp3').classList.toggle('vis',t>=PT[3]);
 
   // Mode badge
-  const badges=['Scroll to Begin','Historical Documentation','Architectural Survey','Condition Assessment','Drag Divider to Compare'];
+  const badges=['Scroll to Begin','Historical Documentation','Architectural Survey','Condition Assessment','Drag Divider \u2014 Compare'];
   const pi=t<PT[0]?0:t<PT[1]?1:t<PT[2]?2:t<PT[3]?3:4;
   document.getElementById('mode-badge').textContent=badges[pi];
 
@@ -608,29 +771,22 @@ function updateScene(t){
     const passed=t>=PT[i];const active=passed&&(i===PT.length-1||t<PT[i+1]);
     el.classList.toggle('active',active);el.classList.toggle('done',passed&&!active);
   });
-
-  // Nav active
-  const cm=pi>0?['history','architecture','condition','future'][pi-1]:'';
-  document.querySelectorAll('.nbtn').forEach(b=>b.classList.toggle('active',b.dataset.m===cm));
+  const modeKey=pi>0?['history','architecture','condition','future'][pi-1]:'';
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.toggle('active',b.dataset.m===modeKey));
 
   // Condition markers
   const showC=t>=PT[2]&&t<PT[3];
   ['cm0','cm1','cm2','cml0','cml1','cml2'].forEach(id=>document.getElementById(id).classList.toggle('show',showC));
+  ['aa0','aa1','aa2'].forEach(id=>document.getElementById(id).classList.toggle('show',t>=PT[1]&&t<PT[2]));
 
-  // Arch annotations
-  const showA=t>=PT[1]&&t<PT[2];
-  ['aa0','aa1','aa2'].forEach(id=>document.getElementById(id).classList.toggle('show',showA));
-
-  // Show split overlay in future phase
   splitOverlay.classList.toggle('show',t>=PT[3]);
-
-  // Hints/banner
   document.getElementById('scroll-hint').style.opacity=t<.04?'1':'0';
   document.getElementById('done-banner').classList.toggle('vis',t>=.96);
 }
 
-// ── RENDER (scissor split in future phase) ────────────
+// ── RENDER FRAME ──────────────────────────────────────
 function renderFrame(t){
+  if(renderer.xr.isPresenting)return; // AR loop handles it
   const W=renderer.domElement.width;
   const H=renderer.domElement.height;
   const inFuture=t>=PT[3];
@@ -638,27 +794,24 @@ function renderFrame(t){
 
   if(inFuture){
     const sx=Math.round(divX*W);
-
     renderer.setScissorTest(true);
     renderer.clear(true,true,true);
 
-    // LEFT half: existing building, no future overlay
+    // LEFT: existing
     Fut.visible=false;
     renderer.setScissor(0,0,sx,H);
     renderer.setViewport(0,0,W,H);
     renderer.render(scene,camera);
 
-    // RIGHT half: future overlay visible
-    Fut.visible=true;
+    // RIGHT: with overlay (unless hidden)
+    Fut.visible=!overlayHidden;
     renderer.setScissor(sx,0,W-sx,H);
     renderer.setViewport(0,0,W,H);
     renderer.render(scene,camera);
 
     renderer.setScissorTest(false);
     renderer.setViewport(0,0,W,H);
-
   } else {
-    // Normal single-pass render
     Fut.visible=false;
     renderer.clear(true,true,true);
     renderer.setScissorTest(false);
@@ -675,9 +828,9 @@ function switchBldg(b){
   hFut.visible=dFut.visible=hArch.visible=dArch.visible=false;
   divX=0.5;slDiv.style.left='50%';
   hintFaded=false;slHint.style.opacity='1';
+  overlayHidden=false;ohbLabel.textContent='Hide overlay';
   window.scrollTo({top:0,behavior:'smooth'});
-  targetT=0;
-  populate(b);updateScene(0);
+  targetT=0;populate(b);updateScene(0);
 }
 document.querySelectorAll('.bldg-tab').forEach(btn=>btn.addEventListener('click',()=>switchBldg(btn.dataset.b)));
 
@@ -696,18 +849,21 @@ window.addEventListener('resize',()=>{
   camera.updateProjectionMatrix();
 });
 
-// ── LOOP ─────────────────────────────────────────────
-const clock=new THREE.Clock();
+// ── MAIN LOOP ─────────────────────────────────────────
 (function loop(){
   requestAnimationFrame(loop);
+  if(renderer.xr.isPresenting)return; // AR loop active, skip
   currentT+=(targetT-currentT)*.055;
-  if(autoRot)theta+=.0022;
+  if(autoRot)theta+=.0018;
   updateScene(currentT);
+  setCam(currentT);
   renderFrame(currentT);
 })();
 
+// ── INIT ──────────────────────────────────────────────
 populate('herrera');
 updateScene(0);
+setCam(0);
 </script>
 </body>
 </html>
