@@ -385,7 +385,6 @@
     alt="Herrera Hall — Existing"
     ar ar-modes="webxr scene-viewer quick-look"
     camera-controls touch-action="pan-y"
-    interpolation-decay="Infinity"
     shadow-intensity="1.4" shadow-softness="0.9" exposure="1.0"
     auto-rotate auto-rotate-delay="2800" rotation-per-second="10deg"
   >
@@ -403,7 +402,6 @@
     id="mv-after"
     src="after.glb"
     alt="Herrera Hall — Future"
-    interpolation-decay="Infinity"
     shadow-intensity="1.4" shadow-softness="0.9" exposure="1.0"
   ></model-viewer>
 
@@ -580,6 +578,7 @@
     let compareActive    = false;
     let sliderPct        = 50;
     let arCurrentModel   = 'before';
+    let rafSync          = null;
 
     /* ── MODE OPEN / CLOSE ── */
     function openMode(mode) {
@@ -695,24 +694,20 @@
     }, { passive: false });
 
     /* ── CAMERA SYNC ── */
-    function onCameraChange() {
-      if (!compareActive) return;
-      try {
-        const o = mvBefore.getCameraOrbit();
-        const t = mvBefore.getCameraTarget();
-        mvAfter.cameraOrbit  = `${o.theta}rad ${o.phi}rad ${o.radius}m`;
-        mvAfter.cameraTarget = `${t.x}m ${t.y}m ${t.z}m`;
-      } catch(e) {}
-    }
-
     function startCameraSync() {
-      mvBefore.addEventListener('camera-change', onCameraChange);
-      // Snap to current position immediately on enter
-      onCameraChange();
+      if (rafSync) return;
+      (function sync() {
+        if (!compareActive) { rafSync = null; return; }
+        try {
+          const o = mvBefore.getCameraOrbit();
+          const t = mvBefore.getCameraTarget();
+          mvAfter.cameraOrbit  = `${o.theta}rad ${o.phi}rad ${o.radius}m`;
+          mvAfter.cameraTarget = `${t.x}m ${t.y}m ${t.z}m`;
+        } catch(e) {}
+        rafSync = requestAnimationFrame(sync);
+      })();
     }
-    function stopCameraSync() {
-      mvBefore.removeEventListener('camera-change', onCameraChange);
-    }
+    function stopCameraSync() { if (rafSync) { cancelAnimationFrame(rafSync); rafSync = null; } }
 
     /* ── AR ── */
     function launchAR() {
