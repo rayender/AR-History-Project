@@ -6,386 +6,378 @@
   <title>Herrera Hall — AR Heritage Viewer</title>
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --bg:         #16110c;
-      --surface:    rgba(28, 20, 12, 0.92);
-      --border:     rgba(201,168,76,0.2);
-      --text:       #f5ede0;
-      --muted:      rgba(245,237,224,0.5);
-      --gold:       #c9a84c;
-      --history:    #c9a84c;
-      --arch:       #7aab8e;
-      --condition:  #d4654a;
-      --future:     #5b8fc2;
-      --radius:     16px;
+      --bg:        #16110c;
+      --surface:   rgba(22,17,12,0.90);
+      --border:    rgba(201,168,76,0.22);
+      --text:      #f5ede0;
+      --muted:     rgba(245,237,224,0.48);
+      --gold:      #c9a84c;
+      --history:   #c9a84c;
+      --arch:      #7aab8e;
+      --condition: #d4654a;
+      --future:    #5b8fc2;
+      --radius:    16px;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+
+    /* ───── GRAIN ───── */
+    body::after {
+      content:''; position:fixed; inset:0; z-index:200; pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity:.55;
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      -webkit-font-smoothing: antialiased;
+
+    /* ───── CORNER BRACKETS ───── */
+    .fx-corners { position:fixed; inset:0; z-index:8; pointer-events:none; opacity:0; transition:opacity 0.4s; }
+    .fx-corners.show { opacity:1; }
+    .corner {
+      position:absolute; width:28px; height:28px;
+      border-color: currentColor; border-style:solid;
+      animation: cornerpulse 3s ease-in-out infinite;
+    }
+    .corner.tl { top:80px; left:16px; border-width:2px 0 0 2px; }
+    .corner.tr { top:80px; right:16px; border-width:2px 2px 0 0; }
+    .corner.bl { bottom:130px; left:16px; border-width:0 0 2px 2px; }
+    .corner.br { bottom:130px; right:16px; border-width:0 2px 2px 0; }
+    @keyframes cornerpulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ───── SWEEP FLASH on model switch ───── */
+    .fx-sweep {
+      position:fixed; inset:0; z-index:50; pointer-events:none;
+      background: linear-gradient(90deg, transparent 0%, rgba(91,143,194,0.5) 50%, transparent 100%);
+      transform:translateX(-110%); opacity:0;
+    }
+    .fx-sweep.active {
+      animation: sweepslide 0.7s cubic-bezier(.4,0,.2,1) forwards;
+      opacity:1;
+    }
+    @keyframes sweepslide { 0%{transform:translateX(-110%)} 100%{transform:translateX(110%)} }
+
+    /* ───── HOLOGRAPHIC OVERLAY (future mode) ───── */
+    .fx-holo {
+      position:fixed; inset:0; z-index:5; pointer-events:none; opacity:0;
+      transition:opacity 0.6s;
+      background:
+        repeating-linear-gradient(0deg, transparent 0px, transparent 7px, rgba(91,143,194,0.04) 7px, rgba(91,143,194,0.04) 8px),
+        radial-gradient(ellipse at 50% 50%, rgba(91,143,194,0.06) 0%, transparent 70%);
+    }
+    .fx-holo.show { opacity:1; }
+
+    /* ───── PULSE RING ───── */
+    .fx-pulse {
+      position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%) scale(0);
+      width:120px; height:120px;
+      border-radius:50%;
+      border:2px solid var(--gold);
+      z-index:9; pointer-events:none; opacity:0;
+    }
+    .fx-pulse.pop { animation:pulseexpand 0.7s cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes pulseexpand {
+      0%   { transform:translate(-50%,-50%) scale(0.2); opacity:0.9; border-color:var(--gold); }
+      100% { transform:translate(-50%,-50%) scale(4);   opacity:0;   }
     }
 
-    /* Subtle grain */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 100; opacity: 0.7;
+    /* ───── MODEL LABEL (center flash) ───── */
+    .model-label {
+      position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%) scale(0.8);
+      z-index:45; pointer-events:none; opacity:0;
+      padding:9px 22px; border-radius:999px;
+      font-family:'Playfair Display',serif; font-style:italic;
+      font-size:14px; letter-spacing:0.06em;
+      transition:opacity 0.22s, transform 0.38s cubic-bezier(.34,1.56,.64,1);
     }
+    .model-label.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+    .model-label.existing { color:var(--gold);   border:1px solid rgba(201,168,76,0.45);  background:rgba(201,168,76,0.1); }
+    .model-label.future-st{ color:var(--future); border:1px solid rgba(91,143,194,0.45);  background:rgba(91,143,194,0.1); }
 
+    /* ───── MODEL VIEWERS ───── */
     model-viewer {
-      width: 100%; height: 100%;
-      position: fixed; inset: 0;
-      background: radial-gradient(ellipse at 50% 40%, #2a1f0f 0%, #16110c 70%);
-      --poster-color: transparent;
-      transition: filter 0.55s ease;
+      width:100%; height:100%;
+      position:fixed; inset:0;
+      background:radial-gradient(ellipse at 50% 40%, #2a1f0f 0%, #16110c 70%);
+      --poster-color:transparent;
+      transition:filter 0.5s ease, opacity 0.4s ease;
     }
-    model-viewer.transitioning { filter: brightness(0.35) blur(3px); }
-    model-viewer::part(default-ar-button) { display: none; }
+    model-viewer::part(default-ar-button){ display:none; }
 
-    /* ── TOP HEADER ── */
+    /* AFTER viewer — stacked on top for comparison */
+    #mv-after {
+      pointer-events:none;
+      opacity:0;
+      clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
+    }
+    #mv-after.compare-active { opacity:1; }
+    model-viewer.dimmed { filter:brightness(0.3) blur(2px); }
+
+    /* ───── COMPARE SLIDER ───── */
+    .compare-wrap {
+      position:fixed; inset:0; z-index:15; pointer-events:none;
+      opacity:0; transition:opacity 0.4s;
+    }
+    .compare-wrap.show { opacity:1; pointer-events:all; }
+
+    .compare-line {
+      position:absolute; top:0; bottom:0; width:2px;
+      background:rgba(255,255,255,0.6);
+      left:50%; transform:translateX(-50%);
+      pointer-events:none;
+      box-shadow:0 0 12px rgba(255,255,255,0.4);
+    }
+
+    .compare-handle {
+      position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:44px; height:44px; border-radius:50%;
+      background:rgba(255,255,255,0.12);
+      border:2px solid rgba(255,255,255,0.7);
+      backdrop-filter:blur(10px);
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; color:#fff;
+      cursor:grab;
+      box-shadow:0 4px 20px rgba(0,0,0,0.5);
+      touch-action:none;
+    }
+    .compare-handle:active { cursor:grabbing; }
+
+    /* Before / After labels on compare */
+    .compare-labels {
+      position:absolute; top:calc(env(safe-area-inset-top,0px) + 88px);
+      left:0; right:0;
+      display:flex; justify-content:space-between;
+      padding:0 24px; pointer-events:none;
+    }
+    .compare-tag {
+      font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase;
+      padding:5px 14px; border-radius:999px; backdrop-filter:blur(10px);
+    }
+    .compare-tag.before { color:var(--gold);   background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.35); }
+    .compare-tag.after  { color:var(--future); background:rgba(91,143,194,0.15); border:1px solid rgba(91,143,194,0.35); }
+
+    /* ───── AR SESSION OVERLAY (inside model-viewer, shown during AR) ───── */
+    .ar-session-ui {
+      position:absolute; bottom:40px; left:50%; transform:translateX(-50%);
+      z-index:100; display:none; flex-direction:column; align-items:center; gap:12px;
+    }
+    .ar-session-ui.ar-active { display:flex; }
+
+    .ar-toggle-pill {
+      background:rgba(0,0,0,0.7); backdrop-filter:blur(20px);
+      border:1px solid rgba(255,255,255,0.2);
+      border-radius:999px; padding:5px;
+      display:flex; gap:4px;
+    }
+    .ar-toggle-pill button {
+      font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
+      letter-spacing:0.1em; text-transform:uppercase;
+      border:none; border-radius:999px; padding:10px 26px;
+      cursor:pointer;
+      transition:background 0.25s, color 0.25s;
+      background:transparent; color:rgba(255,255,255,0.6);
+    }
+    .ar-toggle-pill button.active-before { background:var(--gold); color:#1a1610; }
+    .ar-toggle-pill button.active-after  { background:var(--future); color:#fff; }
+    .ar-note { font-size:11px; color:rgba(255,255,255,0.5); text-align:center; letter-spacing:0.05em; }
+
+    /* ───── ACCENT LINE ───── */
+    .accent-line {
+      position:fixed; top:0; left:0; right:0; height:2.5px; z-index:25;
+      background:var(--gold); transform:scaleX(0); transform-origin:left;
+      transition:transform 0.5s cubic-bezier(.4,0,.2,1), background 0.3s;
+    }
+    .accent-line.on { transform:scaleX(1); }
+
+    /* ───── TOP HEADER ───── */
     .top-header {
-      position: fixed;
-      top: 0; left: 0; right: 0; z-index: 20;
-      padding: calc(env(safe-area-inset-top, 0px) + 18px) 20px 0;
-      background: linear-gradient(to bottom, rgba(22,17,12,0.96) 0%, rgba(22,17,12,0) 100%);
-      padding-bottom: 20px;
-      pointer-events: none;
+      position:fixed; top:0; left:0; right:0; z-index:20;
+      padding:calc(env(safe-area-inset-top,0px) + 18px) 20px 20px;
+      background:linear-gradient(to bottom, rgba(22,17,12,0.96) 0%, rgba(22,17,12,0) 100%);
+      pointer-events:none;
     }
+    .header-eyebrow { font-size:9.5px; font-weight:500; letter-spacing:0.26em; text-transform:uppercase; color:var(--gold); margin-bottom:5px; }
+    .header-title { font-family:'Playfair Display',serif; font-weight:700; font-size:clamp(24px,6vw,34px); line-height:1; color:var(--text); text-shadow:0 2px 24px rgba(0,0,0,0.6); }
+    .header-meta { font-size:11px; font-weight:300; letter-spacing:0.09em; color:var(--muted); margin-top:4px; text-transform:uppercase; }
 
-    .header-eyebrow {
-      font-size: 9.5px;
-      font-weight: 500;
-      letter-spacing: 0.26em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 5px;
-    }
-
-    .header-title {
-      font-family: 'Playfair Display', serif;
-      font-weight: 700;
-      font-size: clamp(24px, 6vw, 34px);
-      line-height: 1;
-      color: var(--text);
-      text-shadow: 0 2px 24px rgba(0,0,0,0.6);
-    }
-
-    .header-meta {
-      font-size: 11px;
-      font-weight: 300;
-      letter-spacing: 0.09em;
-      color: var(--muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-    }
-
-    /* ── AR BADGE (top right) ── */
+    /* ───── AR BADGE ───── */
     .ar-badge {
-      position: fixed;
-      top: calc(env(safe-area-inset-top, 0px) + 20px);
-      right: 16px;
-      z-index: 21;
-      display: flex; align-items: center; gap: 7px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 8px 14px 8px 11px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform 0.18s, background 0.2s;
+      position:fixed; top:calc(env(safe-area-inset-top,0px) + 20px); right:16px;
+      z-index:21; display:flex; align-items:center; gap:7px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:999px; padding:8px 14px 8px 11px;
+      backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      cursor:pointer; -webkit-tap-highlight-color:transparent;
+      transition:transform 0.18s, background 0.2s;
     }
-    .ar-badge:active { transform: scale(0.93); }
+    .ar-badge:active { transform:scale(0.93); }
+    .ar-dot { width:7px; height:7px; border-radius:50%; background:var(--gold); animation:dotpulse 2.2s ease infinite; }
+    @keyframes dotpulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.65)} }
+    .ar-badge span { font-size:11px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--text); }
 
-    .ar-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--gold);
-      animation: dotpulse 2.2s ease infinite;
-    }
-    @keyframes dotpulse {
-      0%,100% { opacity:1; transform:scale(1); }
-      50%      { opacity:0.4; transform:scale(0.65); }
-    }
-
-    .ar-badge span {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text);
-    }
-
-    /* ── INFO PANEL ── */
+    /* ───── INFO PANEL ───── */
     .info-panel {
-      position: fixed;
-      left: 0; right: 0;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 106px);
-      z-index: 30;
-      padding: 0 14px;
-      transform: translateY(calc(100% + 20px));
-      opacity: 0;
-      transition: transform 0.42s cubic-bezier(.4,0,.2,1), opacity 0.42s;
-      pointer-events: none;
+      position:fixed; left:0; right:0;
+      bottom:calc(env(safe-area-inset-bottom,0px) + 106px);
+      z-index:30; padding:0 14px;
+      transform:translateY(calc(100% + 20px)); opacity:0;
+      transition:transform 0.42s cubic-bezier(.4,0,.2,1), opacity 0.42s;
+      pointer-events:none;
     }
-    .info-panel.visible {
-      transform: translateY(0);
-      opacity: 1;
-      pointer-events: all;
-    }
+    .info-panel.visible { transform:translateY(0); opacity:1; pointer-events:all; }
 
     .info-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      backdrop-filter: blur(28px) saturate(1.7);
-      -webkit-backdrop-filter: blur(28px) saturate(1.7);
-      overflow: hidden;
-      max-height: 50vh;
-      display: flex;
-      flex-direction: column;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius);
+      backdrop-filter:blur(28px) saturate(1.7); -webkit-backdrop-filter:blur(28px) saturate(1.7);
+      overflow:hidden; max-height:50vh; display:flex; flex-direction:column;
     }
-
     .card-header {
-      padding: 13px 16px 11px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      padding:13px 16px 11px;
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid var(--border); flex-shrink:0;
     }
-
-    .card-header-left {
-      display: flex; align-items: center; gap: 9px;
-    }
-
-    .card-emoji { font-size: 20px; line-height: 1; }
-
-    .card-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .card-title em { font-style: italic; font-weight: 400; color: var(--muted); }
-
+    .card-header-left { display:flex; align-items:center; gap:9px; }
+    .card-emoji { font-size:20px; line-height:1; }
+    .card-title { font-family:'Playfair Display',serif; font-size:16px; font-weight:600; color:var(--text); }
+    .card-title em { font-style:italic; font-weight:400; color:var(--muted); }
     .close-btn {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.04);
-      color: var(--muted);
-      font-size: 17px; line-height: 28px; text-align: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
+      width:28px; height:28px; border-radius:50%;
+      border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04);
+      color:var(--muted); font-size:17px; line-height:28px; text-align:center;
+      cursor:pointer; flex-shrink:0; -webkit-tap-highlight-color:transparent;
     }
+    .card-body { padding:13px 16px 16px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
-    .card-body {
-      padding: 13px 16px 16px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+    .section { margin-bottom:13px; }
+    .section:last-child { margin-bottom:0; }
+    .section-label { font-size:9px; font-weight:500; letter-spacing:0.24em; text-transform:uppercase; opacity:0.6; margin-bottom:7px; }
+    .section ul { list-style:none; display:flex; flex-direction:column; gap:5px; }
+    .section ul li { font-size:13px; font-weight:300; line-height:1.55; color:var(--text); padding-left:15px; position:relative; }
+    .section ul li::before { content:'–'; position:absolute; left:0; color:inherit; opacity:0.45; }
+    .values-row { display:flex; gap:7px; flex-wrap:wrap; margin-top:9px; }
+    .chip { font-family:'Playfair Display',serif; font-style:italic; font-size:12px; padding:4px 13px; border-radius:999px; border:1px solid currentColor; opacity:0.8; }
 
-    .section { margin-bottom: 13px; }
-    .section:last-child { margin-bottom: 0; }
+    .cond-item { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; background:rgba(212,101,74,0.08); border:1px solid rgba(212,101,74,0.18); margin-bottom:6px; font-size:13px; color:var(--text); }
+    .cond-item .ci { font-size:15px; }
+    .future-notice { display:flex; align-items:center; gap:9px; padding:9px 13px; border-radius:10px; background:rgba(91,143,194,0.1); border:1px solid rgba(91,143,194,0.28); font-size:12px; font-weight:500; color:var(--future); margin-bottom:11px; }
 
-    .section-label {
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-      opacity: 0.6;
-      margin-bottom: 7px;
-    }
+    /* Comparison hint inside future panel */
+    .compare-hint { font-size:11px; color:var(--muted); text-align:center; margin-top:8px; letter-spacing:0.05em; }
 
-    .section ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-
-    .section ul li {
-      font-size: 13px;
-      font-weight: 300;
-      line-height: 1.55;
-      color: var(--text);
-      padding-left: 15px;
-      position: relative;
-    }
-    .section ul li::before {
-      content: '–';
-      position: absolute; left: 0;
-      color: inherit; opacity: 0.45;
-    }
-
-    .values-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 9px; }
-
-    .chip {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: 12px;
-      padding: 4px 13px;
-      border-radius: 999px;
-      border: 1px solid currentColor;
-      opacity: 0.8;
-    }
-
-    .cond-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: rgba(212,101,74,0.08);
-      border: 1px solid rgba(212,101,74,0.18);
-      margin-bottom: 6px;
-      font-size: 13px; color: var(--text);
-    }
-    .cond-item .ci { font-size: 15px; }
-
-    .future-notice {
-      display: flex; align-items: center; gap: 9px;
-      padding: 9px 13px;
-      border-radius: 10px;
-      background: rgba(91,143,194,0.1);
-      border: 1px solid rgba(91,143,194,0.28);
-      font-size: 12px; font-weight: 500;
-      color: var(--future);
-      margin-bottom: 11px;
-    }
-
-    /* ── MODE BAR ── */
+    /* ───── MODE BAR ───── */
     .mode-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 20;
-      padding: 12px 14px;
-      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-      background: linear-gradient(to top, rgba(22,17,12,0.99) 0%, rgba(22,17,12,0) 100%);
+      position:fixed; bottom:0; left:0; right:0; z-index:20;
+      padding:12px 14px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
+      background:linear-gradient(to top, rgba(22,17,12,0.99) 0%, rgba(22,17,12,0) 100%);
     }
-
-    .mode-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
+    .mode-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
     .mode-btn {
-      display: flex; flex-direction: column;
-      align-items: center; gap: 5px;
-      padding: 11px 4px;
-      border-radius: 13px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(22,17,12,0.75);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: all 0.24s cubic-bezier(.4,0,.2,1);
+      display:flex; flex-direction:column; align-items:center; gap:5px;
+      padding:11px 4px; border-radius:13px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:rgba(22,17,12,0.75); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+      cursor:pointer; -webkit-tap-highlight-color:transparent;
+      transition:all 0.24s cubic-bezier(.4,0,.2,1);
     }
-
-    .mode-btn .mi { font-size: 22px; transition: transform 0.28s cubic-bezier(.34,1.56,.64,1); }
-    .mode-btn .ml {
-      font-size: 9.5px; font-weight: 500;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--muted);
-      transition: color 0.24s;
-    }
-
-    .mode-btn.active .mi { transform: scale(1.18); }
-    .mode-btn.active .ml { color: currentColor; }
-    .mode-btn.active { border-color: currentColor; }
-
-    .mode-btn[data-mode="history"].active    { color:var(--history);   background:rgba(201,168,76,0.1);  }
+    .mode-btn .mi { font-size:22px; transition:transform 0.28s cubic-bezier(.34,1.56,.64,1); }
+    .mode-btn .ml { font-size:9.5px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); transition:color 0.24s; }
+    .mode-btn.active .mi { transform:scale(1.18); }
+    .mode-btn.active .ml { color:currentColor; }
+    .mode-btn.active { border-color:currentColor; }
+    .mode-btn[data-mode="history"].active    { color:var(--history);   background:rgba(201,168,76,0.1); }
     .mode-btn[data-mode="architecture"].active { color:var(--arch);    background:rgba(122,171,142,0.1); }
-    .mode-btn[data-mode="condition"].active  { color:var(--condition); background:rgba(212,101,74,0.1);  }
-    .mode-btn[data-mode="future"].active     { color:var(--future);    background:rgba(91,143,194,0.1);  }
-
-    /* ── ACCENT LINE ── */
-    .accent-line {
-      position: fixed; top: 0; left: 0; right: 0;
-      height: 2.5px; z-index: 25;
-      background: var(--gold);
-      transform: scaleX(0); transform-origin: left;
-      transition: transform 0.5s cubic-bezier(.4,0,.2,1), background 0.3s;
-    }
-    .accent-line.on { transform: scaleX(1); }
-
-    /* ── TRANSITION FLASH ── */
-    .t-flash {
-      position: fixed; inset: 0; z-index: 50;
-      pointer-events: none; opacity: 0;
-      transition: opacity 0.35s ease;
-    }
-    .t-flash.show { opacity: 1; }
-    .t-flash.future  { background: radial-gradient(ellipse at center, rgba(91,143,194,0.4) 0%, rgba(22,17,12,0.85) 100%); }
-    .t-flash.existing { background: radial-gradient(ellipse at center, rgba(201,168,76,0.4) 0%, rgba(22,17,12,0.85) 100%); }
-
-    /* ── MODEL LABEL ── */
-    .model-label {
-      position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%, -50%) scale(0.82);
-      z-index: 45;
-      padding: 10px 24px;
-      border-radius: 999px;
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: 14px;
-      letter-spacing: 0.06em;
-      pointer-events: none; opacity: 0;
-      transition: opacity 0.22s, transform 0.38s cubic-bezier(.34,1.56,.64,1);
-    }
-    .model-label.show {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-    .model-label.existing  { color:var(--gold);   border:1px solid rgba(201,168,76,0.4);  background:rgba(201,168,76,0.1);  }
-    .model-label.future-st { color:var(--future); border:1px solid rgba(91,143,194,0.4); background:rgba(91,143,194,0.1); }
+    .mode-btn[data-mode="condition"].active  { color:var(--condition); background:rgba(212,101,74,0.1); }
+    .mode-btn[data-mode="future"].active     { color:var(--future);    background:rgba(91,143,194,0.1); }
   </style>
 </head>
 <body>
 
-  <div class="accent-line" id="accentLine"></div>
-  <div class="t-flash" id="tFlash"></div>
+  <!-- ── EFFECTS ── -->
+
+  <div class="fx-holo" id="fxHolo"></div>
+  <div class="fx-corners" id="fxCorners">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+  </div>
+  <div class="fx-sweep" id="fxSweep"></div>
+  <div class="fx-pulse" id="fxPulse"></div>
   <div class="model-label existing" id="modelLabel">Existing Structure</div>
 
-  <!-- 3D Viewer -->
+  <!-- ── MAIN VIEWER (before / controls AR) ── -->
   <model-viewer
-    id="viewer"
+    id="mv-before"
     src="before.glb"
-    alt="Herrera Hall"
+    alt="Herrera Hall — Existing"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
     touch-action="pan-y"
     shadow-intensity="1.4"
     shadow-softness="0.9"
-    exposure="0.95"
+    exposure="1.0"
     auto-rotate
-    auto-rotate-delay="2500"
+    auto-rotate-delay="2800"
     rotation-per-second="10deg"
+  >
+    <!-- AR Session UI — appears as overlay during WebXR AR on Android -->
+    <div class="ar-session-ui" id="arSessionUI">
+      <div class="ar-toggle-pill">
+        <button id="arBtnBefore" class="active-before" onclick="setARModel('before')">Before</button>
+        <button id="arBtnAfter"  onclick="setARModel('after')">After</button>
+      </div>
+      <div class="ar-note">Tap to switch model in AR</div>
+    </div>
+  </model-viewer>
+
+  <!-- ── AFTER VIEWER (comparison layer) ── -->
+  <model-viewer
+    id="mv-after"
+    src="after.glb"
+    alt="Herrera Hall — Future"
+    camera-controls
+    touch-action="pan-y"
+    shadow-intensity="1.4"
+    shadow-softness="0.9"
+    exposure="1.0"
+    disable-zoom
   ></model-viewer>
 
-  <!-- Top Header -->
+  <!-- ── COMPARE SLIDER ── -->
+  <div class="compare-wrap" id="compareWrap">
+    <div class="compare-labels">
+      <span class="compare-tag before">Existing</span>
+      <span class="compare-tag after">Future</span>
+    </div>
+    <div class="compare-line" id="compareLine"></div>
+    <div class="compare-handle" id="compareHandle">⟺</div>
+  </div>
+
+  <!-- ── ACCENT LINE ── -->
+  <div class="accent-line" id="accentLine"></div>
+
+  <!-- ── TOP HEADER ── -->
   <div class="top-header">
     <div class="header-eyebrow">Heritage AR Viewer · University of San Agustin</div>
     <div class="header-title">Herrera Hall</div>
     <div class="header-meta">Built c. 1946–1948 &nbsp;·&nbsp; Neoclassical</div>
   </div>
 
-  <!-- AR Badge -->
+  <!-- ── AR BADGE ── -->
   <div class="ar-badge" id="arBadge" onclick="launchAR()">
     <div class="ar-dot"></div>
     <span id="arLabel">View in AR</span>
   </div>
 
-  <!-- Info Panel -->
+  <!-- ── INFO PANEL ── -->
   <div class="info-panel" id="infoPanel">
     <div class="info-card">
       <div class="card-header">
@@ -399,31 +391,22 @@
     </div>
   </div>
 
-  <!-- Mode Bar -->
+  <!-- ── MODE BAR ── -->
   <div class="mode-bar">
     <div class="mode-grid">
-      <div class="mode-btn" data-mode="history"      onclick="openMode('history')">
-        <span class="mi">🏛️</span><span class="ml">History</span>
-      </div>
-      <div class="mode-btn" data-mode="architecture" onclick="openMode('architecture')">
-        <span class="mi">🧱</span><span class="ml">Architecture</span>
-      </div>
-      <div class="mode-btn" data-mode="condition"    onclick="openMode('condition')">
-        <span class="mi">⚠️</span><span class="ml">Condition</span>
-      </div>
-      <div class="mode-btn" data-mode="future"       onclick="openMode('future')">
-        <span class="mi">🔭</span><span class="ml">Future</span>
-      </div>
+      <div class="mode-btn" data-mode="history"      onclick="openMode('history')">      <span class="mi">🏛️</span><span class="ml">History</span>      </div>
+      <div class="mode-btn" data-mode="architecture" onclick="openMode('architecture')"> <span class="mi">🧱</span><span class="ml">Architecture</span> </div>
+      <div class="mode-btn" data-mode="condition"    onclick="openMode('condition')">    <span class="mi">⚠️</span><span class="ml">Condition</span>    </div>
+      <div class="mode-btn" data-mode="future"       onclick="openMode('future')">       <span class="mi">🔭</span><span class="ml">Future</span>       </div>
     </div>
   </div>
 
   <script>
+    /* ── CONTENT ─────────────────────────────── */
     const MODES = {
       history: {
-        emoji: '🏛️',
-        title: 'Historical <em>Value</em>',
-        color: '#c9a84c',
-        html: `
+        emoji:'🏛️', title:'Historical <em>Value</em>', color:'#c9a84c',
+        html:`
           <div class="section" style="color:#c9a84c">
             <div class="section-label">Origin</div>
             <ul>
@@ -444,14 +427,11 @@
               <span class="chip" style="color:#c9a84c">Caritas</span>
               <span class="chip" style="color:#c9a84c">Veritas</span>
             </div>
-          </div>
-        `
+          </div>`
       },
       architecture: {
-        emoji: '🧱',
-        title: 'Architectural <em>Style</em>',
-        color: '#7aab8e',
-        html: `
+        emoji:'🧱', title:'Architectural <em>Style</em>', color:'#7aab8e',
+        html:`
           <div class="section" style="color:#7aab8e">
             <div class="section-label">Structural Character</div>
             <ul>
@@ -468,19 +448,16 @@
               <li>Harmonizes with Dolce Garcia Hall in scale and proportion</li>
               <li>Reinforces visual continuity of the heritage core</li>
             </ul>
-          </div>
-        `
+          </div>`
       },
       condition: {
-        emoji: '⚠️',
-        title: 'Condition <em>Monitoring</em>',
-        color: '#d4654a',
-        html: `
+        emoji:'⚠️', title:'Condition <em>Monitoring</em>', color:'#d4654a',
+        html:`
           <div class="section" style="color:#d4654a">
             <div class="section-label">Tracked Issues</div>
-            <div class="cond-item"><span class="ci">🔍</span> <span><strong>Structural Cracks</strong> — Façade and load-bearing walls</span></div>
-            <div class="cond-item"><span class="ci">💧</span> <span><strong>Moisture Damage</strong> — Roof and wall penetration</span></div>
-            <div class="cond-item"><span class="ci">🪨</span> <span><strong>Material Decay</strong> — Masonry surface deterioration</span></div>
+            <div class="cond-item"><span class="ci">🔍</span><span><strong>Structural Cracks</strong> — Façade and load-bearing walls</span></div>
+            <div class="cond-item"><span class="ci">💧</span><span><strong>Moisture Damage</strong> — Roof and wall penetration</span></div>
+            <div class="cond-item"><span class="ci">🪨</span><span><strong>Material Decay</strong> — Masonry surface deterioration</span></div>
           </div>
           <div class="section" style="color:#d4654a">
             <div class="section-label">Ongoing Monitoring</div>
@@ -489,18 +466,12 @@
               <li>Moisture intrusion at joints and parapets</li>
               <li>Surface deterioration of concrete finish</li>
             </ul>
-          </div>
-        `
+          </div>`
       },
       future: {
-        emoji: '🔭',
-        title: 'Future <em>Overlay</em>',
-        color: '#5b8fc2',
-        html: `
-          <div class="future-notice">
-            <span>🔁</span>
-            <span>Switching to proposed conservation model…</span>
-          </div>
+        emoji:'🔭', title:'Future <em>Overlay</em>', color:'#5b8fc2',
+        html:`
+          <div class="future-notice"><span>↔️</span><span>Drag the divider to compare models</span></div>
           <div class="section" style="color:#5b8fc2">
             <div class="section-label">Adaptive Reuse Proposal</div>
             <ul>
@@ -517,30 +488,46 @@
               <li>Balance heritage preservation with functional evolution</li>
             </ul>
           </div>
-        `
+          <p class="compare-hint">Swipe the slider above to reveal the future overlay</p>`
       }
     };
 
-    let activeMode = null;
-    let isFuture   = false;
+    /* ── ELEMENTS ─────────────────────────────── */
+    const mvBefore      = document.getElementById('mv-before');
+    const mvAfter       = document.getElementById('mv-after');
+    const infoPanel     = document.getElementById('infoPanel');
+    const pEmoji        = document.getElementById('pEmoji');
+    const pTitle        = document.getElementById('pTitle');
+    const pBody         = document.getElementById('pBody');
+    const accentLine    = document.getElementById('accentLine');
+    const fxSweep       = document.getElementById('fxSweep');
+    const fxPulse       = document.getElementById('fxPulse');
+    const fxHolo        = document.getElementById('fxHolo');
+    const fxCorners     = document.getElementById('fxCorners');
+    const fxCornerEls   = fxCorners.querySelectorAll('.corner');
+    const modelLabel    = document.getElementById('modelLabel');
+    const arLabel       = document.getElementById('arLabel');
+    const arSessionUI   = document.getElementById('arSessionUI');
+    const arBtnBefore   = document.getElementById('arBtnBefore');
+    const arBtnAfter    = document.getElementById('arBtnAfter');
+    const compareWrap   = document.getElementById('compareWrap');
+    const compareLine   = document.getElementById('compareLine');
+    const compareHandle = document.getElementById('compareHandle');
 
-    const viewer     = document.getElementById('viewer');
-    const infoPanel  = document.getElementById('infoPanel');
-    const pEmoji     = document.getElementById('pEmoji');
-    const pTitle     = document.getElementById('pTitle');
-    const pBody      = document.getElementById('pBody');
-    const accentLine = document.getElementById('accentLine');
-    const tFlash     = document.getElementById('tFlash');
-    const modelLabel = document.getElementById('modelLabel');
-    const arLabel    = document.getElementById('arLabel');
+    /* ── STATE ─────────────────────────────────── */
+    let activeMode     = null;
+    let compareMode    = false;
+    let sliderPct      = 50;
+    let arCurrentModel = 'before';
+    let pendingARReenter = false;
+    let rafSync        = null;
 
+    /* ── MODE OPEN ─────────────────────────────── */
     function openMode(mode) {
-      if (activeMode === mode) {
-        closePanel();
-        if (mode === 'future') revertModel();
-        return;
-      }
-      if (activeMode === 'future' && mode !== 'future') revertModel();
+      if (activeMode === mode) { closePanel(); return; }
+
+      // Leaving future mode — hide comparison
+      if (activeMode === 'future' && mode !== 'future') exitCompare();
 
       activeMode = mode;
       const d = MODES[mode];
@@ -552,50 +539,148 @@
       accentLine.classList.remove('on');
       requestAnimationFrame(() => accentLine.classList.add('on'));
 
+      // Corner color
+      fxCornerEls.forEach(c => c.style.color = d.color);
+      fxCorners.classList.add('show');
+
       pEmoji.textContent = d.emoji;
       pTitle.innerHTML   = d.title;
       pBody.innerHTML    = d.html;
       infoPanel.classList.add('visible');
 
-      if (mode === 'future' && !isFuture) {
-        setTimeout(swapToFuture, 420);
-      }
+      triggerPulse(d.color);
+
+      if (mode === 'future') enterCompare();
     }
 
     function closePanel() {
       infoPanel.classList.remove('visible');
       accentLine.classList.remove('on');
+      fxCorners.classList.remove('show');
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      if (activeMode === 'future') exitCompare();
       activeMode = null;
     }
 
-    function swapToFuture() {
-      isFuture = true;
-      flash('future');
-      viewer.classList.add('transitioning');
-      setTimeout(() => {
-        viewer.src = 'after.glb';
-        viewer.classList.remove('transitioning');
-        showLabel('future-st', 'Future Overlay');
-      }, 520);
+    /* ── COMPARISON SLIDER ─────────────────────── */
+    function enterCompare() {
+      compareMode = true;
+      sliderPct = 50;
+      fxHolo.classList.add('show');
+      mvAfter.classList.add('compare-active');
+      compareWrap.classList.add('show');
+      updateSlider(50);
+      startCameraSync();
+      triggerSweep();
+      showLabel('future-st', 'Future Overlay');
     }
 
-    function revertModel() {
-      if (!isFuture) return;
-      isFuture = false;
-      flash('existing');
-      viewer.classList.add('transitioning');
-      setTimeout(() => {
-        viewer.src = 'before.glb';
-        viewer.classList.remove('transitioning');
-        showLabel('existing', 'Existing Structure');
-      }, 520);
+    function exitCompare() {
+      compareMode = false;
+      fxHolo.classList.remove('show');
+      mvAfter.classList.remove('compare-active');
+      compareWrap.classList.remove('show');
+      stopCameraSync();
     }
 
-    function flash(cls) {
-      tFlash.className = 't-flash ' + cls;
-      tFlash.classList.add('show');
-      setTimeout(() => tFlash.classList.remove('show'), 750);
+    function updateSlider(pct) {
+      sliderPct = pct;
+      const px = (pct / 100) * window.innerWidth;
+      compareLine.style.left    = px + 'px';
+      compareHandle.style.left  = px + 'px';
+      mvAfter.style.clipPath    = `polygon(${pct}% 0%, 100% 0%, 100% 100%, ${pct}% 100%)`;
+    }
+
+    /* Drag — mouse & touch */
+    function onSliderMove(clientX) {
+      const pct = Math.max(4, Math.min(96, (clientX / window.innerWidth) * 100));
+      updateSlider(pct);
+    }
+
+    compareHandle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      const mm = e2 => onSliderMove(e2.clientX);
+      const mu = () => { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); };
+      window.addEventListener('mousemove', mm);
+      window.addEventListener('mouseup', mu);
+    });
+
+    compareHandle.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const tm = e2 => onSliderMove(e2.touches[0].clientX);
+      const te = () => { window.removeEventListener('touchmove', tm); window.removeEventListener('touchend', te); };
+      window.addEventListener('touchmove', tm, {passive:false});
+      window.addEventListener('touchend', te);
+    }, {passive:false});
+
+    /* ── CAMERA SYNC (after mirrors before) ────── */
+    function startCameraSync() {
+      if (rafSync) return;
+      function sync() {
+        if (!compareMode) { rafSync = null; return; }
+        try {
+          const orb = mvBefore.getCameraOrbit();
+          const tgt = mvBefore.getCameraTarget();
+          mvAfter.cameraOrbit  = `${orb.theta}rad ${orb.phi}rad ${orb.radius}m`;
+          mvAfter.cameraTarget = `${tgt.x}m ${tgt.y}m ${tgt.z}m`;
+        } catch(e) {}
+        rafSync = requestAnimationFrame(sync);
+      }
+      rafSync = requestAnimationFrame(sync);
+    }
+    function stopCameraSync() { if(rafSync){cancelAnimationFrame(rafSync);rafSync=null;} }
+
+    /* ── AR CONTROLS ───────────────────────────── */
+    function launchAR() {
+      if (mvBefore.canActivateAR) {
+        mvBefore.activateAR();
+      } else {
+        arLabel.textContent = 'Open on Mobile for AR';
+        setTimeout(() => arLabel.textContent = 'View in AR', 2800);
+      }
+    }
+
+    function setARModel(which) {
+      if (arCurrentModel === which) return;
+      arCurrentModel = which;
+      arBtnBefore.className = which === 'before' ? 'active-before' : '';
+      arBtnAfter.className  = which === 'after'  ? 'active-after'  : '';
+
+      pendingARReenter = true;
+      mvBefore.src = which === 'before' ? 'before.glb' : 'after.glb';
+    }
+
+    mvBefore.addEventListener('load', () => {
+      if (pendingARReenter) {
+        pendingARReenter = false;
+        setTimeout(() => mvBefore.activateAR(), 300);
+      }
+    });
+
+    mvBefore.addEventListener('ar-status', e => {
+      const s = e.detail.status;
+      if (s === 'session-started') {
+        arSessionUI.classList.add('ar-active');
+        arLabel.textContent = 'In AR Session';
+      } else if (s === 'not-presenting') {
+        arSessionUI.classList.remove('ar-active');
+        arLabel.textContent = 'View in AR';
+      }
+    });
+
+    /* ── EFFECTS ──────────────────────────────── */
+    function triggerSweep() {
+      fxSweep.classList.remove('active');
+      void fxSweep.offsetWidth; // reflow
+      fxSweep.classList.add('active');
+      setTimeout(() => fxSweep.classList.remove('active'), 750);
+    }
+
+    function triggerPulse(color) {
+      fxPulse.style.borderColor = color;
+      fxPulse.classList.remove('pop');
+      void fxPulse.offsetWidth;
+      fxPulse.classList.add('pop');
     }
 
     function showLabel(cls, txt) {
@@ -604,19 +689,6 @@
       modelLabel.classList.add('show');
       setTimeout(() => modelLabel.classList.remove('show'), 2200);
     }
-
-    function launchAR() {
-      if (viewer.canActivateAR) {
-        viewer.activateAR();
-      } else {
-        arLabel.textContent = 'Open on Mobile for AR';
-        setTimeout(() => arLabel.textContent = 'View in AR', 2800);
-      }
-    }
-
-    viewer.addEventListener('ar-status', e => {
-      if (e.detail.status === 'not-presenting') arLabel.textContent = 'View in AR';
-    });
   </script>
 
 </body>
