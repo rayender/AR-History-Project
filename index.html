@@ -6,352 +6,406 @@
   <title>Herrera Hall — AR Heritage Viewer</title>
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
     :root {
       --bg:        #16110c;
-      --surface:   rgba(22,17,12,0.90);
+      --surface:   rgba(20,15,9,0.93);
       --border:    rgba(201,168,76,0.22);
       --text:      #f5ede0;
-      --muted:     rgba(245,237,224,0.48);
+      --muted:     rgba(245,237,224,0.5);
       --gold:      #c9a84c;
       --history:   #c9a84c;
       --arch:      #7aab8e;
       --condition: #d4654a;
       --future:    #5b8fc2;
-      --radius:    16px;
-    }
-    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-    html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
-
-    /* ───── GRAIN ───── */
-    body::after {
-      content:''; position:fixed; inset:0; z-index:200; pointer-events:none;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      opacity:.55;
+      --radius:    14px;
+      --font:      'Montserrat', sans-serif;
     }
 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
 
-    /* ───── CORNER BRACKETS ───── */
-    .fx-corners { position:fixed; inset:0; z-index:8; pointer-events:none; opacity:0; transition:opacity 0.4s; }
-    .fx-corners.show { opacity:1; }
+    /* ── MODEL VIEWERS ─────────────────────── */
+    model-viewer {
+      width: 100%; height: 100%;
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, #2a1f0f 0%, #16110c 70%);
+      --poster-color: transparent;
+      transition: filter 0.5s ease;
+    }
+    model-viewer::part(default-ar-button) { display: none; }
+
+    #mv-after {
+      pointer-events: none;
+      opacity: 0;
+      clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
+      transition: opacity 0.4s ease;
+    }
+    #mv-after.active { opacity: 1; }
+
+    /* ── EFFECTS ─────────────────────────── */
+
+    /* Corner brackets */
+    .fx-corners {
+      position: fixed; inset: 0; z-index: 8;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .fx-corners.show { opacity: 1; }
     .corner {
-      position:absolute; width:28px; height:28px;
-      border-color: currentColor; border-style:solid;
-      animation: cornerpulse 3s ease-in-out infinite;
+      position: absolute; width: 26px; height: 26px;
+      border-color: currentColor; border-style: solid;
+      animation: cpulse 3s ease-in-out infinite;
     }
-    .corner.tl { top:80px; left:16px; border-width:2px 0 0 2px; }
-    .corner.tr { top:80px; right:16px; border-width:2px 2px 0 0; }
-    .corner.bl { bottom:130px; left:16px; border-width:0 0 2px 2px; }
-    .corner.br { bottom:130px; right:16px; border-width:0 2px 2px 0; }
-    @keyframes cornerpulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .corner.tl { top: 82px;  left: 14px;  border-width: 2px 0 0 2px; }
+    .corner.tr { top: 82px;  right: 14px; border-width: 2px 2px 0 0; }
+    .corner.bl { bottom: 128px; left: 14px;  border-width: 0 0 2px 2px; }
+    .corner.br { bottom: 128px; right: 14px; border-width: 0 2px 2px 0; }
+    @keyframes cpulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
-    /* ───── SWEEP FLASH on model switch ───── */
+    /* Sweep flash */
     .fx-sweep {
-      position:fixed; inset:0; z-index:50; pointer-events:none;
-      background: linear-gradient(90deg, transparent 0%, rgba(91,143,194,0.5) 50%, transparent 100%);
-      transform:translateX(-110%); opacity:0;
+      position: fixed; inset: 0; z-index: 50; pointer-events: none;
+      background: linear-gradient(90deg, transparent 0%, rgba(91,143,194,0.45) 50%, transparent 100%);
+      transform: translateX(-110%); opacity: 0;
     }
     .fx-sweep.active {
-      animation: sweepslide 0.7s cubic-bezier(.4,0,.2,1) forwards;
-      opacity:1;
+      animation: sweepgo 0.65s cubic-bezier(.4,0,.2,1) forwards;
+      opacity: 1;
     }
-    @keyframes sweepslide { 0%{transform:translateX(-110%)} 100%{transform:translateX(110%)} }
+    @keyframes sweepgo { 0%{transform:translateX(-110%)} 100%{transform:translateX(110%)} }
 
-    /* ───── HOLOGRAPHIC OVERLAY (future mode) ───── */
+    /* Holographic overlay (future mode) */
     .fx-holo {
-      position:fixed; inset:0; z-index:5; pointer-events:none; opacity:0;
-      transition:opacity 0.6s;
+      position: fixed; inset: 0; z-index: 5; pointer-events: none; opacity: 0;
+      transition: opacity 0.6s;
       background:
         repeating-linear-gradient(0deg, transparent 0px, transparent 7px, rgba(91,143,194,0.04) 7px, rgba(91,143,194,0.04) 8px),
         radial-gradient(ellipse at 50% 50%, rgba(91,143,194,0.06) 0%, transparent 70%);
     }
-    .fx-holo.show { opacity:1; }
+    .fx-holo.show { opacity: 1; }
 
-    /* ───── PULSE RING ───── */
+    /* Pulse ring */
     .fx-pulse {
-      position:fixed; top:50%; left:50%;
-      transform:translate(-50%,-50%) scale(0);
-      width:120px; height:120px;
-      border-radius:50%;
-      border:2px solid var(--gold);
-      z-index:9; pointer-events:none; opacity:0;
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%,-50%) scale(0);
+      width: 120px; height: 120px; border-radius: 50%;
+      border: 2px solid var(--gold);
+      z-index: 9; pointer-events: none; opacity: 0;
     }
-    .fx-pulse.pop { animation:pulseexpand 0.7s cubic-bezier(.4,0,.2,1) forwards; }
-    @keyframes pulseexpand {
-      0%   { transform:translate(-50%,-50%) scale(0.2); opacity:0.9; border-color:var(--gold); }
-      100% { transform:translate(-50%,-50%) scale(4);   opacity:0;   }
+    .fx-pulse.pop { animation: pulsego 0.7s cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes pulsego {
+      0%   { transform:translate(-50%,-50%) scale(0.2); opacity:0.9; }
+      100% { transform:translate(-50%,-50%) scale(4);   opacity:0; }
     }
 
-    /* ───── MODEL LABEL (center flash) ───── */
+    /* Model label */
     .model-label {
-      position:fixed; top:50%; left:50%;
-      transform:translate(-50%,-50%) scale(0.8);
-      z-index:45; pointer-events:none; opacity:0;
-      padding:9px 22px; border-radius:999px;
-      font-family:'Playfair Display',serif; font-style:italic;
-      font-size:14px; letter-spacing:0.06em;
-      transition:opacity 0.22s, transform 0.38s cubic-bezier(.34,1.56,.64,1);
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%,-50%) scale(0.8);
+      z-index: 45; pointer-events: none; opacity: 0;
+      padding: 8px 20px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      transition: opacity 0.22s, transform 0.38s cubic-bezier(.34,1.56,.64,1);
     }
-    .model-label.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
-    .model-label.existing { color:var(--gold);   border:1px solid rgba(201,168,76,0.45);  background:rgba(201,168,76,0.1); }
-    .model-label.future-st{ color:var(--future); border:1px solid rgba(91,143,194,0.45);  background:rgba(91,143,194,0.1); }
+    .model-label.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    .model-label.existing  { color:var(--gold);   border:1px solid rgba(201,168,76,0.5);  background:rgba(201,168,76,0.12); }
+    .model-label.future-st { color:var(--future); border:1px solid rgba(91,143,194,0.5);  background:rgba(91,143,194,0.12); }
 
-    /* ───── MODEL VIEWERS ───── */
-    model-viewer {
-      width:100%; height:100%;
-      position:fixed; inset:0;
-      background:radial-gradient(ellipse at 50% 40%, #2a1f0f 0%, #16110c 70%);
-      --poster-color:transparent;
-      transition:filter 0.5s ease, opacity 0.4s ease;
+    /* ── ACCENT LINE ─────────────────────── */
+    .accent-line {
+      position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 25;
+      background: var(--gold); transform: scaleX(0); transform-origin: left;
+      transition: transform 0.45s cubic-bezier(.4,0,.2,1), background 0.3s;
     }
-    model-viewer::part(default-ar-button){ display:none; }
+    .accent-line.on { transform: scaleX(1); }
 
-    /* AFTER viewer — stacked on top for comparison */
-    #mv-after {
-      pointer-events:none;
-      opacity:0;
-      clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
-    }
-    #mv-after.compare-active { opacity:1; }
-    model-viewer.dimmed { filter:brightness(0.3) blur(2px); }
-
-    /* ───── COMPARE SLIDER ───── */
+    /* ── COMPARE SLIDER ─────────────────── */
     .compare-wrap {
-      position:fixed; inset:0; z-index:15; pointer-events:none;
-      opacity:0; transition:opacity 0.4s;
+      position: fixed; inset: 0; z-index: 15; pointer-events: none;
+      opacity: 0; transition: opacity 0.4s;
     }
-    .compare-wrap.show { opacity:1; pointer-events:all; }
+    .compare-wrap.show { opacity: 1; /* pointer-events stay none — only handle captures events */ }
 
     .compare-line {
-      position:absolute; top:0; bottom:0; width:2px;
-      background:rgba(255,255,255,0.6);
-      left:50%; transform:translateX(-50%);
-      pointer-events:none;
-      box-shadow:0 0 12px rgba(255,255,255,0.4);
+      position: absolute; top: 0; bottom: 0; width: 2px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.65);
+      pointer-events: none;
+      box-shadow: 0 0 14px rgba(255,255,255,0.35);
     }
 
     .compare-handle {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      width:44px; height:44px; border-radius:50%;
-      background:rgba(255,255,255,0.12);
-      border:2px solid rgba(255,255,255,0.7);
-      backdrop-filter:blur(10px);
-      display:flex; align-items:center; justify-content:center;
-      font-size:18px; color:#fff;
-      cursor:grab;
-      box-shadow:0 4px 20px rgba(0,0,0,0.5);
-      touch-action:none;
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(15,12,8,0.6);
+      border: 2px solid rgba(255,255,255,0.7);
+      backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fff;
+      cursor: grab; touch-action: none;
+      pointer-events: all; /* only this captures events, not the whole overlay */
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
     }
-    .compare-handle:active { cursor:grabbing; }
+    .compare-handle:active { cursor: grabbing; }
 
-    /* Before / After labels on compare */
     .compare-labels {
-      position:absolute; top:calc(env(safe-area-inset-top,0px) + 88px);
-      left:0; right:0;
-      display:flex; justify-content:space-between;
-      padding:0 24px; pointer-events:none;
+      position: absolute;
+      top: calc(env(safe-area-inset-top,0px) + 90px);
+      left: 0; right: 0;
+      display: flex; justify-content: space-between;
+      padding: 0 20px; pointer-events: none;
     }
     .compare-tag {
-      font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase;
-      padding:5px 14px; border-radius:999px; backdrop-filter:blur(10px);
+      font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 999px; backdrop-filter: blur(10px);
     }
     .compare-tag.before { color:var(--gold);   background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.35); }
     .compare-tag.after  { color:var(--future); background:rgba(91,143,194,0.15); border:1px solid rgba(91,143,194,0.35); }
 
-    /* ───── AR SESSION OVERLAY (inside model-viewer, shown during AR) ───── */
+    /* ── AR SESSION UI (inside model-viewer) ── */
     .ar-session-ui {
-      position:absolute; bottom:40px; left:50%; transform:translateX(-50%);
-      z-index:100; display:none; flex-direction:column; align-items:center; gap:12px;
+      position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
+      display: none; flex-direction: column; align-items: center; gap: 10px;
+      z-index: 100;
     }
-    .ar-session-ui.ar-active { display:flex; }
+    .ar-session-ui.ar-active { display: flex; }
 
     .ar-toggle-pill {
-      background:rgba(0,0,0,0.7); backdrop-filter:blur(20px);
-      border:1px solid rgba(255,255,255,0.2);
-      border-radius:999px; padding:5px;
-      display:flex; gap:4px;
+      background: rgba(0,0,0,0.72); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px; padding: 5px; display: flex; gap: 4px;
     }
     .ar-toggle-pill button {
-      font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
-      letter-spacing:0.1em; text-transform:uppercase;
-      border:none; border-radius:999px; padding:10px 26px;
-      cursor:pointer;
-      transition:background 0.25s, color 0.25s;
-      background:transparent; color:rgba(255,255,255,0.6);
+      font-family: var(--font); font-size: 13px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      border: none; border-radius: 999px; padding: 11px 28px;
+      cursor: pointer; background: transparent; color: rgba(255,255,255,0.55);
+      transition: background 0.25s, color 0.25s; min-width: 100px;
     }
-    .ar-toggle-pill button.active-before { background:var(--gold); color:#1a1610; }
-    .ar-toggle-pill button.active-after  { background:var(--future); color:#fff; }
-    .ar-note { font-size:11px; color:rgba(255,255,255,0.5); text-align:center; letter-spacing:0.05em; }
+    .ar-toggle-pill button.ab { background:var(--gold); color:#1a1610; }
+    .ar-toggle-pill button.aa { background:var(--future); color:#fff; }
+    .ar-note { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; }
 
-    /* ───── ACCENT LINE ───── */
-    .accent-line {
-      position:fixed; top:0; left:0; right:0; height:2.5px; z-index:25;
-      background:var(--gold); transform:scaleX(0); transform-origin:left;
-      transition:transform 0.5s cubic-bezier(.4,0,.2,1), background 0.3s;
-    }
-    .accent-line.on { transform:scaleX(1); }
-
-    /* ───── TOP HEADER ───── */
+    /* ── TOP HEADER ──────────────────────── */
     .top-header {
-      position:fixed; top:0; left:0; right:0; z-index:20;
-      padding:calc(env(safe-area-inset-top,0px) + 18px) 20px 20px;
-      background:linear-gradient(to bottom, rgba(22,17,12,0.96) 0%, rgba(22,17,12,0) 100%);
-      pointer-events:none;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+      padding: calc(env(safe-area-inset-top,0px) + 16px) 18px 18px;
+      background: linear-gradient(to bottom, rgba(22,17,12,0.97) 0%, rgba(22,17,12,0) 100%);
+      pointer-events: none;
     }
-    .header-eyebrow { font-size:9.5px; font-weight:500; letter-spacing:0.26em; text-transform:uppercase; color:var(--gold); margin-bottom:5px; }
-    .header-title { font-family:'Playfair Display',serif; font-weight:700; font-size:clamp(24px,6vw,34px); line-height:1; color:var(--text); text-shadow:0 2px 24px rgba(0,0,0,0.6); }
-    .header-meta { font-size:11px; font-weight:300; letter-spacing:0.09em; color:var(--muted); margin-top:4px; text-transform:uppercase; }
+    .header-eyebrow {
+      font-size: 9px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 4px;
+    }
+    .header-title {
+      font-size: clamp(22px, 5.5vw, 30px); font-weight: 700; line-height: 1.05;
+      color: var(--text); text-shadow: 0 2px 20px rgba(0,0,0,0.6); letter-spacing: -0.01em;
+    }
+    .header-meta {
+      font-size: 10px; font-weight: 400; letter-spacing: 0.1em; color: var(--muted);
+      margin-top: 3px; text-transform: uppercase;
+    }
 
-    /* ───── AR BADGE ───── */
+    /* ── AR BADGE ───────────────────────── */
     .ar-badge {
-      position:fixed; top:calc(env(safe-area-inset-top,0px) + 20px); right:16px;
-      z-index:21; display:flex; align-items:center; gap:7px;
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:999px; padding:8px 14px 8px 11px;
-      backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-      cursor:pointer; -webkit-tap-highlight-color:transparent;
-      transition:transform 0.18s, background 0.2s;
+      position: fixed;
+      top: calc(env(safe-area-inset-top,0px) + 16px);
+      right: 14px; z-index: 21;
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: 10px 16px 10px 12px;
+      backdrop-filter: blur(16px); cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.18s;
+      min-height: 44px; /* accessible tap target */
     }
-    .ar-badge:active { transform:scale(0.93); }
-    .ar-dot { width:7px; height:7px; border-radius:50%; background:var(--gold); animation:dotpulse 2.2s ease infinite; }
-    @keyframes dotpulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.65)} }
-    .ar-badge span { font-size:11px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--text); }
+    .ar-badge:active { transform: scale(0.93); }
+    .ar-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
+      animation: dp 2.2s ease infinite;
+    }
+    @keyframes dp { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.6)} }
+    .ar-badge span { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
 
-    /* ───── INFO PANEL ───── */
+    /* ── INFO PANEL ─────────────────────── */
     .info-panel {
-      position:fixed; left:0; right:0;
-      bottom:calc(env(safe-area-inset-bottom,0px) + 106px);
-      z-index:30; padding:0 14px;
-      transform:translateY(calc(100% + 20px)); opacity:0;
-      transition:transform 0.42s cubic-bezier(.4,0,.2,1), opacity 0.42s;
-      pointer-events:none;
+      position: fixed; left: 0; right: 0;
+      bottom: calc(env(safe-area-inset-bottom,0px) + 98px);
+      z-index: 30; padding: 0 12px;
+      transform: translateY(calc(100% + 20px)); opacity: 0;
+      transition: transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s;
+      pointer-events: none;
     }
-    .info-panel.visible { transform:translateY(0); opacity:1; pointer-events:all; }
+    .info-panel.visible { transform: translateY(0); opacity: 1; pointer-events: all; }
 
     .info-card {
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:var(--radius);
-      backdrop-filter:blur(28px) saturate(1.7); -webkit-backdrop-filter:blur(28px) saturate(1.7);
-      overflow:hidden; max-height:50vh; display:flex; flex-direction:column;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(28px) saturate(1.6);
+      overflow: hidden; max-height: 46vh; display: flex; flex-direction: column;
     }
+
     .card-header {
-      padding:13px 16px 11px;
-      display:flex; align-items:center; justify-content:space-between;
-      border-bottom:1px solid var(--border); flex-shrink:0;
+      padding: 14px 16px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
-    .card-header-left { display:flex; align-items:center; gap:9px; }
-    .card-emoji { font-size:20px; line-height:1; }
-    .card-title { font-family:'Playfair Display',serif; font-size:16px; font-weight:600; color:var(--text); }
-    .card-title em { font-style:italic; font-weight:400; color:var(--muted); }
-    .close-btn {
-      width:28px; height:28px; border-radius:50%;
-      border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04);
-      color:var(--muted); font-size:17px; line-height:28px; text-align:center;
-      cursor:pointer; flex-shrink:0; -webkit-tap-highlight-color:transparent;
+    .card-header-left { display: flex; align-items: center; gap: 10px; }
+    .card-emoji { font-size: 20px; line-height: 1; }
+    .card-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+
+    /* Minimize button — only hides panel, keeps mode active */
+    .minimize-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+      color: var(--muted); font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent;
     }
-    .card-body { padding:13px 16px 16px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
-    .section { margin-bottom:13px; }
-    .section:last-child { margin-bottom:0; }
-    .section-label { font-size:9px; font-weight:500; letter-spacing:0.24em; text-transform:uppercase; opacity:0.6; margin-bottom:7px; }
-    .section ul { list-style:none; display:flex; flex-direction:column; gap:5px; }
-    .section ul li { font-size:13px; font-weight:300; line-height:1.55; color:var(--text); padding-left:15px; position:relative; }
-    .section ul li::before { content:'–'; position:absolute; left:0; color:inherit; opacity:0.45; }
-    .values-row { display:flex; gap:7px; flex-wrap:wrap; margin-top:9px; }
-    .chip { font-family:'Playfair Display',serif; font-style:italic; font-size:12px; padding:4px 13px; border-radius:999px; border:1px solid currentColor; opacity:0.8; }
+    .card-body { padding: 14px 16px 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
-    .cond-item { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; background:rgba(212,101,74,0.08); border:1px solid rgba(212,101,74,0.18); margin-bottom:6px; font-size:13px; color:var(--text); }
-    .cond-item .ci { font-size:15px; }
-    .future-notice { display:flex; align-items:center; gap:9px; padding:9px 13px; border-radius:10px; background:rgba(91,143,194,0.1); border:1px solid rgba(91,143,194,0.28); font-size:12px; font-weight:500; color:var(--future); margin-bottom:11px; }
+    .section { margin-bottom: 14px; }
+    .section:last-child { margin-bottom: 0; }
+    .section-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+      opacity: 0.55; margin-bottom: 8px;
+    }
+    .section ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .section ul li {
+      font-size: 13px; font-weight: 400; line-height: 1.55;
+      color: var(--text); padding-left: 15px; position: relative;
+    }
+    .section ul li::before { content: '–'; position: absolute; left: 0; color: inherit; opacity: 0.4; }
 
-    /* Comparison hint inside future panel */
-    .compare-hint { font-size:11px; color:var(--muted); text-align:center; margin-top:8px; letter-spacing:0.05em; }
+    .values-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 10px; }
+    .chip {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 999px; border: 1px solid currentColor; opacity: 0.8;
+    }
 
-    /* ───── MODE BAR ───── */
+    .cond-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      background: rgba(212,101,74,0.08); border: 1px solid rgba(212,101,74,0.18);
+      margin-bottom: 7px; font-size: 13px; color: var(--text);
+    }
+    .cond-item .ci { font-size: 16px; flex-shrink: 0; }
+
+    .future-notice {
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 13px; border-radius: 10px;
+      background: rgba(91,143,194,0.1); border: 1px solid rgba(91,143,194,0.28);
+      font-size: 12px; font-weight: 600; color: var(--future); margin-bottom: 12px;
+    }
+    .compare-hint {
+      font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; letter-spacing: 0.04em;
+    }
+
+    /* ── MODE BAR ───────────────────────── */
     .mode-bar {
-      position:fixed; bottom:0; left:0; right:0; z-index:20;
-      padding:12px 14px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
-      background:linear-gradient(to top, rgba(22,17,12,0.99) 0%, rgba(22,17,12,0) 100%);
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+      padding: 10px 12px;
+      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 14px);
+      background: linear-gradient(to top, rgba(22,17,12,0.99) 0%, rgba(22,17,12,0) 100%);
     }
-    .mode-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .mode-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+
     .mode-btn {
-      display:flex; flex-direction:column; align-items:center; gap:5px;
-      padding:11px 4px; border-radius:13px;
-      border:1px solid rgba(255,255,255,0.06);
-      background:rgba(22,17,12,0.75); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-      cursor:pointer; -webkit-tap-highlight-color:transparent;
-      transition:all 0.24s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      padding: 12px 4px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(22,17,12,0.78); backdrop-filter: blur(14px);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: all 0.22s cubic-bezier(.4,0,.2,1);
+      min-height: 64px; /* bigger tap target for mobile */
     }
-    .mode-btn .mi { font-size:22px; transition:transform 0.28s cubic-bezier(.34,1.56,.64,1); }
-    .mode-btn .ml { font-size:9.5px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); transition:color 0.24s; }
-    .mode-btn.active .mi { transform:scale(1.18); }
-    .mode-btn.active .ml { color:currentColor; }
-    .mode-btn.active { border-color:currentColor; }
+    .mode-btn .mi { font-size: 22px; transition: transform 0.26s cubic-bezier(.34,1.56,.64,1); }
+    .mode-btn .ml {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); transition: color 0.22s;
+    }
+    .mode-btn.active .mi { transform: scale(1.15); }
+    .mode-btn.active .ml { color: currentColor; }
+    .mode-btn.active { border-color: currentColor; }
+
     .mode-btn[data-mode="history"].active    { color:var(--history);   background:rgba(201,168,76,0.1); }
     .mode-btn[data-mode="architecture"].active { color:var(--arch);    background:rgba(122,171,142,0.1); }
     .mode-btn[data-mode="condition"].active  { color:var(--condition); background:rgba(212,101,74,0.1); }
     .mode-btn[data-mode="future"].active     { color:var(--future);    background:rgba(91,143,194,0.1); }
+
+    /* Expand panel button (shown when mode active but panel minimized) */
+    .expand-btn {
+      position: fixed; z-index: 31;
+      left: 50%; transform: translateX(-50%);
+      bottom: calc(env(safe-area-inset-bottom,0px) + 100px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: 8px 20px;
+      display: none; align-items: center; gap: 7px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text); cursor: pointer; backdrop-filter: blur(16px);
+      -webkit-tap-highlight-color: transparent;
+      animation: expandbounce 0.4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .expand-btn.show { display: flex; }
+    @keyframes expandbounce { from{transform:translateX(-50%) scale(0.8);opacity:0} to{transform:translateX(-50%) scale(1);opacity:1} }
   </style>
 </head>
 <body>
 
-  <!-- ── EFFECTS ── -->
-
+  <!-- Effects -->
   <div class="fx-holo" id="fxHolo"></div>
   <div class="fx-corners" id="fxCorners">
-    <div class="corner tl"></div>
-    <div class="corner tr"></div>
-    <div class="corner bl"></div>
-    <div class="corner br"></div>
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
   </div>
   <div class="fx-sweep" id="fxSweep"></div>
   <div class="fx-pulse" id="fxPulse"></div>
-  <div class="model-label existing" id="modelLabel">Existing Structure</div>
+  <div class="model-label existing" id="modelLabel">Existing</div>
 
-  <!-- ── MAIN VIEWER (before / controls AR) ── -->
+  <!-- Accent line -->
+  <div class="accent-line" id="accentLine"></div>
+
+  <!-- Before viewer (main + AR) -->
   <model-viewer
     id="mv-before"
     src="before.glb"
     alt="Herrera Hall — Existing"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-    camera-controls
-    touch-action="pan-y"
-    shadow-intensity="1.4"
-    shadow-softness="0.9"
-    exposure="1.0"
-    auto-rotate
-    auto-rotate-delay="2800"
-    rotation-per-second="10deg"
+    ar ar-modes="webxr scene-viewer quick-look"
+    camera-controls touch-action="pan-y"
+    shadow-intensity="1.4" shadow-softness="0.9" exposure="1.0"
+    auto-rotate auto-rotate-delay="2800" rotation-per-second="10deg"
   >
-    <!-- AR Session UI — appears as overlay during WebXR AR on Android -->
     <div class="ar-session-ui" id="arSessionUI">
       <div class="ar-toggle-pill">
-        <button id="arBtnBefore" class="active-before" onclick="setARModel('before')">Before</button>
+        <button id="arBtnBefore" class="ab" onclick="setARModel('before')">Before</button>
         <button id="arBtnAfter"  onclick="setARModel('after')">After</button>
       </div>
       <div class="ar-note">Tap to switch model in AR</div>
     </div>
   </model-viewer>
 
-  <!-- ── AFTER VIEWER (comparison layer) ── -->
+  <!-- After viewer (comparison layer) -->
   <model-viewer
     id="mv-after"
     src="after.glb"
     alt="Herrera Hall — Future"
-    camera-controls
-    touch-action="pan-y"
-    shadow-intensity="1.4"
-    shadow-softness="0.9"
-    exposure="1.0"
-    disable-zoom
+    shadow-intensity="1.4" shadow-softness="0.9" exposure="1.0"
   ></model-viewer>
 
-  <!-- ── COMPARE SLIDER ── -->
+  <!-- Compare slider -->
   <div class="compare-wrap" id="compareWrap">
     <div class="compare-labels">
       <span class="compare-tag before">Existing</span>
@@ -361,23 +415,20 @@
     <div class="compare-handle" id="compareHandle">⟺</div>
   </div>
 
-  <!-- ── ACCENT LINE ── -->
-  <div class="accent-line" id="accentLine"></div>
-
-  <!-- ── TOP HEADER ── -->
+  <!-- Top header -->
   <div class="top-header">
     <div class="header-eyebrow">Heritage AR Viewer · University of San Agustin</div>
     <div class="header-title">Herrera Hall</div>
-    <div class="header-meta">Built c. 1946–1948 &nbsp;·&nbsp; Neoclassical</div>
+    <div class="header-meta">Built c. 1946–1948 · Neoclassical</div>
   </div>
 
-  <!-- ── AR BADGE ── -->
+  <!-- AR badge -->
   <div class="ar-badge" id="arBadge" onclick="launchAR()">
     <div class="ar-dot"></div>
     <span id="arLabel">View in AR</span>
   </div>
 
-  <!-- ── INFO PANEL ── -->
+  <!-- Info panel -->
   <div class="info-panel" id="infoPanel">
     <div class="info-card">
       <div class="card-header">
@@ -385,13 +436,21 @@
           <span class="card-emoji" id="pEmoji"></span>
           <div class="card-title" id="pTitle"></div>
         </div>
-        <div class="close-btn" onclick="closePanel()">×</div>
+        <!-- ↓ Minimizes panel only — mode stays active, compare stays visible -->
+        <div class="minimize-btn" id="minimizeBtn" onclick="minimizePanel()">↓</div>
       </div>
       <div class="card-body" id="pBody"></div>
     </div>
   </div>
 
-  <!-- ── MODE BAR ── -->
+  <!-- Expand button — shown when panel is minimized but mode is still active -->
+  <div class="expand-btn" id="expandBtn" onclick="expandPanel()">
+    <span id="expandEmoji"></span>
+    <span id="expandLabel"></span>
+    <span>↑</span>
+  </div>
+
+  <!-- Mode bar -->
   <div class="mode-bar">
     <div class="mode-grid">
       <div class="mode-btn" data-mode="history"      onclick="openMode('history')">      <span class="mi">🏛️</span><span class="ml">History</span>      </div>
@@ -402,11 +461,10 @@
   </div>
 
   <script>
-    /* ── CONTENT ─────────────────────────────── */
     const MODES = {
       history: {
-        emoji:'🏛️', title:'Historical <em>Value</em>', color:'#c9a84c',
-        html:`
+        emoji: '🏛️', title: 'Historical Value', color: '#c9a84c',
+        html: `
           <div class="section" style="color:#c9a84c">
             <div class="section-label">Origin</div>
             <ul>
@@ -419,7 +477,6 @@
             <div class="section-label">Augustinian Values</div>
             <ul>
               <li>Core academic building of University of San Agustin</li>
-              <li>Represents the institution's founding mission</li>
               <li>Landmark within the campus historical axis</li>
             </ul>
             <div class="values-row">
@@ -430,29 +487,28 @@
           </div>`
       },
       architecture: {
-        emoji:'🧱', title:'Architectural <em>Style</em>', color:'#7aab8e',
-        html:`
+        emoji: '🧱', title: 'Architectural Style', color: '#7aab8e',
+        html: `
           <div class="section" style="color:#7aab8e">
             <div class="section-label">Structural Character</div>
             <ul>
               <li>Neoclassical <strong>symmetry and proportion</strong></li>
-              <li>Use of durable <strong>masonry and concrete</strong></li>
+              <li>Durable <strong>masonry and concrete</strong> construction</li>
               <li>Strong façade — columns, pediment, rhythmic fenestration</li>
             </ul>
           </div>
           <div class="section" style="color:#7aab8e">
-            <div class="section-label">Spatial & Aesthetic Value</div>
+            <div class="section-label">Spatial Value</div>
             <ul>
               <li>Landmark anchor along the campus axis</li>
               <li>Contributes to institutional identity and sense of place</li>
               <li>Harmonizes with Dolce Garcia Hall in scale and proportion</li>
-              <li>Reinforces visual continuity of the heritage core</li>
             </ul>
           </div>`
       },
       condition: {
-        emoji:'⚠️', title:'Condition <em>Monitoring</em>', color:'#d4654a',
-        html:`
+        emoji: '⚠️', title: 'Condition Monitoring', color: '#d4654a',
+        html: `
           <div class="section" style="color:#d4654a">
             <div class="section-label">Tracked Issues</div>
             <div class="cond-item"><span class="ci">🔍</span><span><strong>Structural Cracks</strong> — Façade and load-bearing walls</span></div>
@@ -469,8 +525,8 @@
           </div>`
       },
       future: {
-        emoji:'🔭', title:'Future <em>Overlay</em>', color:'#5b8fc2',
-        html:`
+        emoji: '🔭', title: 'Future Overlay', color: '#5b8fc2',
+        html: `
           <div class="future-notice"><span>↔️</span><span>Drag the divider to compare models</span></div>
           <div class="section" style="color:#5b8fc2">
             <div class="section-label">Adaptive Reuse Proposal</div>
@@ -483,16 +539,15 @@
           <div class="section" style="color:#5b8fc2">
             <div class="section-label">Conservation Intent</div>
             <ul>
-              <li>Retain Augustinian identity while upgrading internal layout</li>
-              <li>Contribute to ensemble and axial campus planning</li>
+              <li>Retain Augustinian identity, upgrade internal layout</li>
               <li>Balance heritage preservation with functional evolution</li>
             </ul>
           </div>
-          <p class="compare-hint">Swipe the slider above to reveal the future overlay</p>`
+          <p class="compare-hint">Minimize this panel to see the full comparison</p>`
       }
     };
 
-    /* ── ELEMENTS ─────────────────────────────── */
+    /* ── ELEMENTS ── */
     const mvBefore      = document.getElementById('mv-before');
     const mvAfter       = document.getElementById('mv-after');
     const infoPanel     = document.getElementById('infoPanel');
@@ -513,20 +568,27 @@
     const compareWrap   = document.getElementById('compareWrap');
     const compareLine   = document.getElementById('compareLine');
     const compareHandle = document.getElementById('compareHandle');
+    const expandBtn     = document.getElementById('expandBtn');
+    const expandEmoji   = document.getElementById('expandEmoji');
+    const expandLabel   = document.getElementById('expandLabel');
 
-    /* ── STATE ─────────────────────────────────── */
-    let activeMode     = null;
-    let compareMode    = false;
-    let sliderPct      = 50;
-    let arCurrentModel = 'before';
+    /* ── STATE ── */
+    let activeMode       = null;
+    let compareActive    = false;
+    let sliderPct        = 50;
+    let arCurrentModel   = 'before';
     let pendingARReenter = false;
-    let rafSync        = null;
+    let rafSync          = null;
 
-    /* ── MODE OPEN ─────────────────────────────── */
+    /* ── MODE OPEN / CLOSE ── */
     function openMode(mode) {
-      if (activeMode === mode) { closePanel(); return; }
+      // Tapping the active mode button = fully exit the mode
+      if (activeMode === mode) {
+        exitMode();
+        return;
+      }
 
-      // Leaving future mode — hide comparison
+      // Leaving future mode for another
       if (activeMode === 'future' && mode !== 'future') exitCompare();
 
       activeMode = mode;
@@ -539,35 +601,54 @@
       accentLine.classList.remove('on');
       requestAnimationFrame(() => accentLine.classList.add('on'));
 
-      // Corner color
       fxCornerEls.forEach(c => c.style.color = d.color);
       fxCorners.classList.add('show');
 
       pEmoji.textContent = d.emoji;
-      pTitle.innerHTML   = d.title;
+      pTitle.textContent  = d.title;
       pBody.innerHTML    = d.html;
+
       infoPanel.classList.add('visible');
+      expandBtn.classList.remove('show');
 
       triggerPulse(d.color);
 
       if (mode === 'future') enterCompare();
     }
 
-    function closePanel() {
+    function exitMode() {
+      if (activeMode === 'future') exitCompare();
+      activeMode = null;
       infoPanel.classList.remove('visible');
+      expandBtn.classList.remove('show');
       accentLine.classList.remove('on');
       fxCorners.classList.remove('show');
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-      if (activeMode === 'future') exitCompare();
-      activeMode = null;
     }
 
-    /* ── COMPARISON SLIDER ─────────────────────── */
+    /* ── PANEL MINIMIZE / EXPAND ──
+       Minimizing only hides the card — mode stays active,
+       compare layer stays visible, accent line stays on.         */
+    function minimizePanel() {
+      infoPanel.classList.remove('visible');
+
+      const d = MODES[activeMode];
+      expandEmoji.textContent = d.emoji;
+      expandLabel.textContent = d.title;
+      expandBtn.classList.add('show');
+    }
+
+    function expandPanel() {
+      infoPanel.classList.add('visible');
+      expandBtn.classList.remove('show');
+    }
+
+    /* ── COMPARE ── */
     function enterCompare() {
-      compareMode = true;
+      compareActive = true;
       sliderPct = 50;
       fxHolo.classList.add('show');
-      mvAfter.classList.add('compare-active');
+      mvAfter.classList.add('active');
       compareWrap.classList.add('show');
       updateSlider(50);
       startCameraSync();
@@ -576,9 +657,9 @@
     }
 
     function exitCompare() {
-      compareMode = false;
+      compareActive = false;
       fxHolo.classList.remove('show');
-      mvAfter.classList.remove('compare-active');
+      mvAfter.classList.remove('active');
       compareWrap.classList.remove('show');
       stopCameraSync();
     }
@@ -586,12 +667,11 @@
     function updateSlider(pct) {
       sliderPct = pct;
       const px = (pct / 100) * window.innerWidth;
-      compareLine.style.left    = px + 'px';
-      compareHandle.style.left  = px + 'px';
-      mvAfter.style.clipPath    = `polygon(${pct}% 0%, 100% 0%, 100% 100%, ${pct}% 100%)`;
+      compareLine.style.left   = px + 'px';
+      compareHandle.style.left = px + 'px';
+      mvAfter.style.clipPath   = `polygon(${pct}% 0%, 100% 0%, 100% 100%, ${pct}% 100%)`;
     }
 
-    /* Drag — mouse & touch */
     function onSliderMove(clientX) {
       const pct = Math.max(4, Math.min(96, (clientX / window.innerWidth) * 100));
       updateSlider(pct);
@@ -609,28 +689,27 @@
       e.preventDefault();
       const tm = e2 => onSliderMove(e2.touches[0].clientX);
       const te = () => { window.removeEventListener('touchmove', tm); window.removeEventListener('touchend', te); };
-      window.addEventListener('touchmove', tm, {passive:false});
+      window.addEventListener('touchmove', tm, { passive: false });
       window.addEventListener('touchend', te);
-    }, {passive:false});
+    }, { passive: false });
 
-    /* ── CAMERA SYNC (after mirrors before) ────── */
+    /* ── CAMERA SYNC ── */
     function startCameraSync() {
       if (rafSync) return;
-      function sync() {
-        if (!compareMode) { rafSync = null; return; }
+      (function sync() {
+        if (!compareActive) { rafSync = null; return; }
         try {
-          const orb = mvBefore.getCameraOrbit();
-          const tgt = mvBefore.getCameraTarget();
-          mvAfter.cameraOrbit  = `${orb.theta}rad ${orb.phi}rad ${orb.radius}m`;
-          mvAfter.cameraTarget = `${tgt.x}m ${tgt.y}m ${tgt.z}m`;
+          const o = mvBefore.getCameraOrbit();
+          const t = mvBefore.getCameraTarget();
+          mvAfter.cameraOrbit  = `${o.theta}rad ${o.phi}rad ${o.radius}m`;
+          mvAfter.cameraTarget = `${t.x}m ${t.y}m ${t.z}m`;
         } catch(e) {}
         rafSync = requestAnimationFrame(sync);
-      }
-      rafSync = requestAnimationFrame(sync);
+      })();
     }
-    function stopCameraSync() { if(rafSync){cancelAnimationFrame(rafSync);rafSync=null;} }
+    function stopCameraSync() { if (rafSync) { cancelAnimationFrame(rafSync); rafSync = null; } }
 
-    /* ── AR CONTROLS ───────────────────────────── */
+    /* ── AR ── */
     function launchAR() {
       if (mvBefore.canActivateAR) {
         mvBefore.activateAR();
@@ -643,9 +722,8 @@
     function setARModel(which) {
       if (arCurrentModel === which) return;
       arCurrentModel = which;
-      arBtnBefore.className = which === 'before' ? 'active-before' : '';
-      arBtnAfter.className  = which === 'after'  ? 'active-after'  : '';
-
+      arBtnBefore.className = which === 'before' ? 'ab' : '';
+      arBtnAfter.className  = which === 'after'  ? 'aa' : '';
       pendingARReenter = true;
       mvBefore.src = which === 'before' ? 'before.glb' : 'after.glb';
     }
@@ -668,21 +746,19 @@
       }
     });
 
-    /* ── EFFECTS ──────────────────────────────── */
+    /* ── EFFECTS ── */
     function triggerSweep() {
       fxSweep.classList.remove('active');
-      void fxSweep.offsetWidth; // reflow
+      void fxSweep.offsetWidth;
       fxSweep.classList.add('active');
-      setTimeout(() => fxSweep.classList.remove('active'), 750);
+      setTimeout(() => fxSweep.classList.remove('active'), 700);
     }
-
     function triggerPulse(color) {
       fxPulse.style.borderColor = color;
       fxPulse.classList.remove('pop');
       void fxPulse.offsetWidth;
       fxPulse.classList.add('pop');
     }
-
     function showLabel(cls, txt) {
       modelLabel.className = 'model-label ' + cls;
       modelLabel.textContent = txt;
