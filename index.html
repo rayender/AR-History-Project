@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Herrera Hall — AR Heritage Viewer</title>
+  <title>Herrera Hall - AR Heritage Viewer</title>
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -23,43 +23,31 @@
       --radius:    14px;
       --font:      'Montserrat', sans-serif;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-      -webkit-font-smoothing: antialiased;
+      width: 100%; height: 100%; overflow: hidden;
+      background: var(--bg); color: var(--text);
+      font-family: var(--font); -webkit-font-smoothing: antialiased;
     }
 
-    /* ── MODEL VIEWERS ─────────────────────── */
+    /* MODEL VIEWERS */
     model-viewer {
-      width: 100%; height: 100%;
-      position: fixed; inset: 0;
+      width: 100%; height: 100%; position: fixed; inset: 0;
       background: radial-gradient(ellipse at 50% 40%, #2a1f0f 0%, #16110c 70%);
-      --poster-color: transparent;
-      transition: filter 0.5s ease;
+      --poster-color: transparent; transition: filter 0.5s ease;
     }
     model-viewer::part(default-ar-button) { display: none; }
-
     #mv-after {
-      pointer-events: none;
-      opacity: 0;
+      pointer-events: none; opacity: 0;
       clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
       transition: opacity 0.4s ease;
     }
     #mv-after.active { opacity: 1; }
 
-    /* ── EFFECTS ─────────────────────────── */
-
-    /* Corner brackets */
+    /* EFFECTS */
     .fx-corners {
       position: fixed; inset: 0; z-index: 8;
-      pointer-events: none; opacity: 0;
-      transition: opacity 0.4s;
+      pointer-events: none; opacity: 0; transition: opacity 0.4s;
     }
     .fx-corners.show { opacity: 1; }
     .corner {
@@ -67,41 +55,33 @@
       border-color: currentColor; border-style: solid;
       animation: cpulse 3s ease-in-out infinite;
     }
-    .corner.tl { top: 82px;  left: 14px;  border-width: 2px 0 0 2px; }
-    .corner.tr { top: 82px;  right: 14px; border-width: 2px 2px 0 0; }
+    .corner.tl { top: 82px;     left: 14px;  border-width: 2px 0 0 2px; }
+    .corner.tr { top: 82px;     right: 14px; border-width: 2px 2px 0 0; }
     .corner.bl { bottom: 128px; left: 14px;  border-width: 0 0 2px 2px; }
     .corner.br { bottom: 128px; right: 14px; border-width: 0 2px 2px 0; }
     @keyframes cpulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
-    /* Sweep flash */
     .fx-sweep {
       position: fixed; inset: 0; z-index: 50; pointer-events: none;
       background: linear-gradient(90deg, transparent 0%, rgba(91,143,194,0.45) 50%, transparent 100%);
       transform: translateX(-110%); opacity: 0;
     }
-    .fx-sweep.active {
-      animation: sweepgo 0.65s cubic-bezier(.4,0,.2,1) forwards;
-      opacity: 1;
-    }
+    .fx-sweep.active { animation: sweepgo 0.65s cubic-bezier(.4,0,.2,1) forwards; opacity: 1; }
     @keyframes sweepgo { 0%{transform:translateX(-110%)} 100%{transform:translateX(110%)} }
 
-    /* Holographic overlay (future mode) */
     .fx-holo {
-      position: fixed; inset: 0; z-index: 5; pointer-events: none; opacity: 0;
-      transition: opacity 0.6s;
+      position: fixed; inset: 0; z-index: 5; pointer-events: none; opacity: 0; transition: opacity 0.6s;
       background:
         repeating-linear-gradient(0deg, transparent 0px, transparent 7px, rgba(91,143,194,0.04) 7px, rgba(91,143,194,0.04) 8px),
         radial-gradient(ellipse at 50% 50%, rgba(91,143,194,0.06) 0%, transparent 70%);
     }
     .fx-holo.show { opacity: 1; }
 
-    /* Pulse ring */
     .fx-pulse {
       position: fixed; top: 50%; left: 50%;
       transform: translate(-50%,-50%) scale(0);
       width: 120px; height: 120px; border-radius: 50%;
-      border: 2px solid var(--gold);
-      z-index: 9; pointer-events: none; opacity: 0;
+      border: 2px solid var(--gold); z-index: 9; pointer-events: none; opacity: 0;
     }
     .fx-pulse.pop { animation: pulsego 0.7s cubic-bezier(.4,0,.2,1) forwards; }
     @keyframes pulsego {
@@ -109,20 +89,7 @@
       100% { transform:translate(-50%,-50%) scale(4);   opacity:0; }
     }
 
-    /* Model label */
-    .model-label {
-      position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%,-50%) scale(0.8);
-      z-index: 45; pointer-events: none; opacity: 0;
-      padding: 8px 20px; border-radius: 999px;
-      font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-      transition: opacity 0.22s, transform 0.38s cubic-bezier(.34,1.56,.64,1);
-    }
-    .model-label.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
-    .model-label.existing  { color:var(--gold);   border:1px solid rgba(201,168,76,0.5);  background:rgba(201,168,76,0.12); }
-    .model-label.future-st { color:var(--future); border:1px solid rgba(91,143,194,0.5);  background:rgba(91,143,194,0.12); }
-
-    /* ── ACCENT LINE ─────────────────────── */
+    /* ACCENT LINE */
     .accent-line {
       position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 25;
       background: var(--gold); transform: scaleX(0); transform-origin: left;
@@ -130,41 +97,30 @@
     }
     .accent-line.on { transform: scaleX(1); }
 
-    /* ── COMPARE SLIDER ─────────────────── */
+    /* COMPARE SLIDER */
     .compare-wrap {
-      position: fixed; inset: 0; z-index: 15; pointer-events: none;
-      opacity: 0; transition: opacity 0.4s;
+      position: fixed; inset: 0; z-index: 15; pointer-events: none; opacity: 0; transition: opacity 0.4s;
     }
-    .compare-wrap.show { opacity: 1; /* pointer-events stay none — only handle captures events */ }
-
+    .compare-wrap.show { opacity: 1; }
     .compare-line {
       position: absolute; top: 0; bottom: 0; width: 2px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,0.65);
-      pointer-events: none;
-      box-shadow: 0 0 14px rgba(255,255,255,0.35);
+      transform: translateX(-50%); background: rgba(255,255,255,0.65);
+      pointer-events: none; box-shadow: 0 0 14px rgba(255,255,255,0.35);
     }
-
     .compare-handle {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%,-50%);
       width: 52px; height: 52px; border-radius: 50%;
-      background: rgba(15,12,8,0.6);
-      border: 2px solid rgba(255,255,255,0.7);
+      background: rgba(15,12,8,0.6); border: 2px solid rgba(255,255,255,0.7);
       backdrop-filter: blur(10px);
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: #fff;
-      cursor: grab; touch-action: none;
-      pointer-events: all; /* only this captures events, not the whole overlay */
+      cursor: grab; touch-action: none; pointer-events: all;
       box-shadow: 0 4px 24px rgba(0,0,0,0.6);
     }
     .compare-handle:active { cursor: grabbing; }
-
     .compare-labels {
-      position: absolute;
-      top: calc(env(safe-area-inset-top,0px) + 90px);
-      left: 0; right: 0;
-      display: flex; justify-content: space-between;
+      position: absolute; top: calc(env(safe-area-inset-top,0px) + 90px);
+      left: 0; right: 0; display: flex; justify-content: space-between;
       padding: 0 20px; pointer-events: none;
     }
     .compare-tag {
@@ -174,14 +130,12 @@
     .compare-tag.before { color:var(--gold);   background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.35); }
     .compare-tag.after  { color:var(--future); background:rgba(91,143,194,0.15); border:1px solid rgba(91,143,194,0.35); }
 
-    /* ── AR SESSION UI (inside model-viewer) ── */
+    /* AR SESSION UI */
     .ar-session-ui {
       position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
-      display: none; flex-direction: column; align-items: center; gap: 10px;
-      z-index: 100;
+      display: none; flex-direction: column; align-items: center; gap: 10px; z-index: 100;
     }
     .ar-session-ui.ar-active { display: flex; }
-
     .ar-toggle-pill {
       background: rgba(0,0,0,0.72); backdrop-filter: blur(20px);
       border: 1px solid rgba(255,255,255,0.18);
@@ -190,182 +144,138 @@
     .ar-toggle-pill button {
       font-family: var(--font); font-size: 13px; font-weight: 700;
       letter-spacing: 0.1em; text-transform: uppercase;
-      border: none; border-radius: 999px; padding: 11px 28px;
+      border: none; border-radius: 999px; padding: 11px 28px; min-width: 100px;
       cursor: pointer; background: transparent; color: rgba(255,255,255,0.55);
-      transition: background 0.25s, color 0.25s; min-width: 100px;
+      transition: background 0.25s, color 0.25s;
     }
     .ar-toggle-pill button.ab { background:var(--gold); color:#1a1610; }
     .ar-toggle-pill button.aa { background:var(--future); color:#fff; }
     .ar-note { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; }
 
-    /* ── TOP HEADER ──────────────────────── */
+    /* TOP HEADER */
     .top-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 20;
       padding: calc(env(safe-area-inset-top,0px) + 16px) 18px 18px;
       background: linear-gradient(to bottom, rgba(22,17,12,0.97) 0%, rgba(22,17,12,0) 100%);
       pointer-events: none;
     }
-    .header-eyebrow {
-      font-size: 9px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
-      color: var(--gold); margin-bottom: 4px;
-    }
-    .header-title {
-      font-size: clamp(22px, 5.5vw, 30px); font-weight: 700; line-height: 1.05;
-      color: var(--text); text-shadow: 0 2px 20px rgba(0,0,0,0.6); letter-spacing: -0.01em;
-    }
-    .header-meta {
-      font-size: 10px; font-weight: 400; letter-spacing: 0.1em; color: var(--muted);
-      margin-top: 3px; text-transform: uppercase;
-    }
+    .header-eyebrow { font-size: 9px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+    .header-title { font-size: clamp(22px, 5.5vw, 30px); font-weight: 700; line-height: 1.05; color: var(--text); text-shadow: 0 2px 20px rgba(0,0,0,0.6); }
+    .header-meta { font-size: 10px; font-weight: 400; letter-spacing: 0.1em; color: var(--muted); margin-top: 3px; text-transform: uppercase; }
 
-    /* ── AR BADGE ───────────────────────── */
+    /* AR BADGE */
     .ar-badge {
-      position: fixed;
-      top: calc(env(safe-area-inset-top,0px) + 16px);
-      right: 14px; z-index: 21;
+      position: fixed; top: calc(env(safe-area-inset-top,0px) + 16px); right: 14px; z-index: 21;
       display: flex; align-items: center; gap: 7px;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 999px; padding: 10px 16px 10px 12px;
       backdrop-filter: blur(16px); cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform 0.18s;
-      min-height: 44px; /* accessible tap target */
+      -webkit-tap-highlight-color: transparent; transition: transform 0.18s; min-height: 44px;
     }
     .ar-badge:active { transform: scale(0.93); }
-    .ar-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
-      animation: dp 2.2s ease infinite;
-    }
+    .ar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: dp 2.2s ease infinite; }
     @keyframes dp { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.6)} }
     .ar-badge span { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
 
-    /* ── INFO PANEL ─────────────────────── */
+    /* INFO PANEL */
     .info-panel {
       position: fixed; left: 0; right: 0;
       bottom: calc(env(safe-area-inset-bottom,0px) + 98px);
       z-index: 30; padding: 0 12px;
       transform: translateY(calc(100% + 20px)); opacity: 0;
-      transition: transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s;
-      pointer-events: none;
+      transition: transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s; pointer-events: none;
     }
     .info-panel.visible { transform: translateY(0); opacity: 1; pointer-events: all; }
-
     .info-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius);
-      backdrop-filter: blur(28px) saturate(1.6);
-      overflow: hidden; max-height: 46vh; display: flex; flex-direction: column;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      backdrop-filter: blur(28px) saturate(1.6); overflow: hidden; max-height: 46vh; display: flex; flex-direction: column;
     }
-
     .card-header {
-      padding: 14px 16px 12px;
-      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 12px; display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
     .card-header-left { display: flex; align-items: center; gap: 10px; }
-    .card-emoji { font-size: 20px; line-height: 1; }
-    .card-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
-
-    /* Minimize button — only hides panel, keeps mode active */
+    .card-icon { width: 20px; height: 20px; flex-shrink: 0; display: flex; }
+    .card-icon svg { width: 20px; height: 20px; }
+    .card-title { font-size: 15px; font-weight: 700; color: var(--text); }
     .minimize-btn {
       width: 36px; height: 36px; border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
-      color: var(--muted); font-size: 16px;
-      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); display: flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent;
     }
-
     .card-body { padding: 14px 16px 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
     .section { margin-bottom: 14px; }
     .section:last-child { margin-bottom: 0; }
-    .section-label {
-      font-size: 9px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
-      opacity: 0.55; margin-bottom: 8px;
-    }
+    .section-label { font-size: 9px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.55; margin-bottom: 8px; }
     .section ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-    .section ul li {
-      font-size: 13px; font-weight: 400; line-height: 1.55;
-      color: var(--text); padding-left: 15px; position: relative;
-    }
-    .section ul li::before { content: '–'; position: absolute; left: 0; color: inherit; opacity: 0.4; }
-
+    .section ul li { font-size: 13px; font-weight: 400; line-height: 1.55; color: var(--text); padding-left: 15px; position: relative; }
+    .section ul li::before { content: '-'; position: absolute; left: 0; color: inherit; opacity: 0.4; }
     .values-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 10px; }
-    .chip {
-      font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 5px 14px; border-radius: 999px; border: 1px solid currentColor; opacity: 0.8;
-    }
+    .chip { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 14px; border-radius: 999px; border: 1px solid currentColor; opacity: 0.8; }
 
     .cond-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 10px;
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
       background: rgba(212,101,74,0.08); border: 1px solid rgba(212,101,74,0.18);
       margin-bottom: 7px; font-size: 13px; color: var(--text);
     }
-    .cond-item .ci { font-size: 16px; flex-shrink: 0; }
-
+    .cond-icon { width: 18px; height: 18px; flex-shrink: 0; }
     .future-notice {
-      display: flex; align-items: center; gap: 9px;
-      padding: 10px 13px; border-radius: 10px;
+      display: flex; align-items: center; gap: 9px; padding: 10px 13px; border-radius: 10px;
       background: rgba(91,143,194,0.1); border: 1px solid rgba(91,143,194,0.28);
       font-size: 12px; font-weight: 600; color: var(--future); margin-bottom: 12px;
     }
-    .compare-hint {
-      font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; letter-spacing: 0.04em;
-    }
+    .future-notice svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+    .compare-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: 10px; }
 
-    /* ── MODE BAR ───────────────────────── */
+    /* MODE BAR */
     .mode-bar {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
-      padding: 10px 12px;
-      padding-bottom: calc(env(safe-area-inset-bottom,0px) + 14px);
+      padding: 10px 12px; padding-bottom: calc(env(safe-area-inset-bottom,0px) + 14px);
       background: linear-gradient(to top, rgba(22,17,12,0.99) 0%, rgba(22,17,12,0) 100%);
     }
     .mode-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
-
     .mode-btn {
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
-      padding: 12px 4px; border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.07);
+      display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px;
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.07);
       background: rgba(22,17,12,0.78); backdrop-filter: blur(14px);
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      transition: all 0.22s cubic-bezier(.4,0,.2,1);
-      min-height: 64px; /* bigger tap target for mobile */
+      transition: all 0.22s cubic-bezier(.4,0,.2,1); min-height: 64px;
     }
-    .mode-btn .mi { font-size: 22px; transition: transform 0.26s cubic-bezier(.34,1.56,.64,1); }
-    .mode-btn .ml {
-      font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--muted); transition: color 0.22s;
-    }
+    .mode-btn .mi { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; transition: transform 0.26s cubic-bezier(.34,1.56,.64,1); }
+    .mode-btn .mi svg { width: 24px; height: 24px; fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.22s; }
+    .mode-btn .ml { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); transition: color 0.22s; }
     .mode-btn.active .mi { transform: scale(1.15); }
     .mode-btn.active .ml { color: currentColor; }
     .mode-btn.active { border-color: currentColor; }
+    .mode-btn.active .mi svg { stroke: currentColor; }
 
-    .mode-btn[data-mode="history"].active    { color:var(--history);   background:rgba(201,168,76,0.1); }
-    .mode-btn[data-mode="architecture"].active { color:var(--arch);    background:rgba(122,171,142,0.1); }
-    .mode-btn[data-mode="condition"].active  { color:var(--condition); background:rgba(212,101,74,0.1); }
-    .mode-btn[data-mode="future"].active     { color:var(--future);    background:rgba(91,143,194,0.1); }
+    .mode-btn[data-mode="history"].active      { color:var(--history);   background:rgba(201,168,76,0.1); }
+    .mode-btn[data-mode="architecture"].active { color:var(--arch);      background:rgba(122,171,142,0.1); }
+    .mode-btn[data-mode="condition"].active    { color:var(--condition); background:rgba(212,101,74,0.1); }
+    .mode-btn[data-mode="future"].active       { color:var(--future);    background:rgba(91,143,194,0.1); }
 
-    /* Expand panel button (shown when mode active but panel minimized) */
+    /* EXPAND BTN */
     .expand-btn {
-      position: fixed; z-index: 31;
-      left: 50%; transform: translateX(-50%);
+      position: fixed; z-index: 31; left: 50%; transform: translateX(-50%);
       bottom: calc(env(safe-area-inset-bottom,0px) + 100px);
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 999px; padding: 8px 20px;
+      border-radius: 999px; padding: 8px 18px;
       display: none; align-items: center; gap: 7px;
       font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
       color: var(--text); cursor: pointer; backdrop-filter: blur(16px);
-      -webkit-tap-highlight-color: transparent;
+      -webkit-tap-highlight-color: transparent; white-space: nowrap;
       animation: expandbounce 0.4s cubic-bezier(.34,1.56,.64,1);
     }
     .expand-btn.show { display: flex; }
+    .expand-btn .eico { width: 15px; height: 15px; display: flex; }
+    .expand-btn .eico svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
     @keyframes expandbounce { from{transform:translateX(-50%) scale(0.8);opacity:0} to{transform:translateX(-50%) scale(1);opacity:1} }
   </style>
 </head>
 <body>
 
-  <!-- Effects -->
   <div class="fx-holo" id="fxHolo"></div>
   <div class="fx-corners" id="fxCorners">
     <div class="corner tl"></div><div class="corner tr"></div>
@@ -373,18 +283,15 @@
   </div>
   <div class="fx-sweep" id="fxSweep"></div>
   <div class="fx-pulse" id="fxPulse"></div>
-  <div class="model-label existing" id="modelLabel">Existing</div>
-
-  <!-- Accent line -->
   <div class="accent-line" id="accentLine"></div>
 
-  <!-- Before viewer (main + AR) -->
+  <!-- Before viewer -->
   <model-viewer
     id="mv-before"
     src="before.glb"
-    alt="Herrera Hall — Existing"
+    alt="Herrera Hall - Existing"
     ar ar-modes="webxr scene-viewer quick-look"
-    camera-controls touch-action="pan-y"
+    camera-controls
     shadow-intensity="1.4" shadow-softness="0.9" exposure="1.0"
     auto-rotate auto-rotate-delay="2800" rotation-per-second="10deg"
   >
@@ -393,7 +300,7 @@
         <button id="arBtnBefore" class="ab" onclick="setARModel('before')">Before</button>
         <button id="arBtnAfter"  onclick="setARModel('after')">After</button>
       </div>
-      <div class="ar-note">Tap to switch model in AR</div>
+      <div class="ar-note" id="arNote">Tap "View in AR" to re-enter</div>
     </div>
   </model-viewer>
 
@@ -401,8 +308,10 @@
   <model-viewer
     id="mv-after"
     src="after.glb"
-    alt="Herrera Hall — Future"
+    alt="Herrera Hall - Future"
+    interpolation-decay="Infinity"
     shadow-intensity="1.4" shadow-softness="0.9" exposure="1.0"
+    style="pointer-events:none; visibility:hidden;"
   ></model-viewer>
 
   <!-- Compare slider -->
@@ -412,14 +321,18 @@
       <span class="compare-tag after">Future</span>
     </div>
     <div class="compare-line" id="compareLine"></div>
-    <div class="compare-handle" id="compareHandle">⟺</div>
+    <div class="compare-handle" id="compareHandle">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 16l-4-4 4-4M17 8l4 4-4 4M3 12h18"/>
+      </svg>
+    </div>
   </div>
 
   <!-- Top header -->
   <div class="top-header">
-    <div class="header-eyebrow">Heritage AR Viewer · University of San Agustin</div>
+    <div class="header-eyebrow">Heritage AR Viewer - University of San Agustin</div>
     <div class="header-title">Herrera Hall</div>
-    <div class="header-meta">Built c. 1946–1948 · Neoclassical</div>
+    <div class="header-meta">Built c. 1946-1948 - Neoclassical</div>
   </div>
 
   <!-- AR badge -->
@@ -433,42 +346,100 @@
     <div class="info-card">
       <div class="card-header">
         <div class="card-header-left">
-          <span class="card-emoji" id="pEmoji"></span>
+          <div class="card-icon" id="pIcon"></div>
           <div class="card-title" id="pTitle"></div>
         </div>
-        <!-- ↓ Minimizes panel only — mode stays active, compare stays visible -->
-        <div class="minimize-btn" id="minimizeBtn" onclick="minimizePanel()">↓</div>
+        <div class="minimize-btn" onclick="minimizePanel()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
       </div>
       <div class="card-body" id="pBody"></div>
     </div>
   </div>
 
-  <!-- Expand button — shown when panel is minimized but mode is still active -->
+  <!-- Expand button -->
   <div class="expand-btn" id="expandBtn" onclick="expandPanel()">
-    <span id="expandEmoji"></span>
+    <div class="eico" id="expandIcon"></div>
     <span id="expandLabel"></span>
-    <span>↑</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
   </div>
 
   <!-- Mode bar -->
   <div class="mode-bar">
     <div class="mode-grid">
-      <div class="mode-btn" data-mode="history"      onclick="openMode('history')">      <span class="mi">🏛️</span><span class="ml">History</span>      </div>
-      <div class="mode-btn" data-mode="architecture" onclick="openMode('architecture')"> <span class="mi">🧱</span><span class="ml">Architecture</span> </div>
-      <div class="mode-btn" data-mode="condition"    onclick="openMode('condition')">    <span class="mi">⚠️</span><span class="ml">Condition</span>    </div>
-      <div class="mode-btn" data-mode="future"       onclick="openMode('future')">       <span class="mi">🔭</span><span class="ml">Future</span>       </div>
+
+      <div class="mode-btn" data-mode="history" onclick="openMode('history')">
+        <div class="mi">
+          <svg viewBox="0 0 24 24">
+            <rect x="4" y="3" width="16" height="2" rx="0.5"/>
+            <rect x="4" y="19" width="16" height="2" rx="0.5"/>
+            <line x1="7" y1="5" x2="7" y2="19"/>
+            <line x1="10" y1="5" x2="10" y2="19"/>
+            <line x1="14" y1="5" x2="14" y2="19"/>
+            <line x1="17" y1="5" x2="17" y2="19"/>
+          </svg>
+        </div>
+        <span class="ml">History</span>
+      </div>
+
+      <div class="mode-btn" data-mode="architecture" onclick="openMode('architecture')">
+        <div class="mi">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 21h18"/>
+            <path d="M5 21V7l7-4 7 4v14"/>
+            <path d="M9 21v-6h6v6"/>
+          </svg>
+        </div>
+        <span class="ml">Architecture</span>
+      </div>
+
+      <div class="mode-btn" data-mode="condition" onclick="openMode('condition')">
+        <div class="mi">
+          <svg viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <span class="ml">Condition</span>
+      </div>
+
+      <div class="mode-btn" data-mode="future" onclick="openMode('future')">
+        <div class="mi">
+          <svg viewBox="0 0 24 24">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+        </div>
+        <span class="ml">Future</span>
+      </div>
+
     </div>
   </div>
 
   <script>
+    const ICONS = {
+      history: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="2" rx="0.5"/><rect x="4" y="19" width="16" height="2" rx="0.5"/><line x1="7" y1="5" x2="7" y2="19"/><line x1="10" y1="5" x2="10" y2="19"/><line x1="14" y1="5" x2="14" y2="19"/><line x1="17" y1="5" x2="17" y2="19"/></svg>`,
+      architecture: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>`,
+      condition: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+      future: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`
+    };
+
+    const COND_ICONS = {
+      crack: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M10 8l1 3-2 2 3 2"/></svg>`,
+      water: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 15a8 8 0 0 0 16 0c0-3-2-7-8-13z"/></svg>`,
+      decay: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>`
+    };
+
     const MODES = {
       history: {
-        emoji: '🏛️', title: 'Historical Value', color: '#c9a84c',
+        title: 'Historical Value', color: '#c9a84c',
         html: `
           <div class="section" style="color:#c9a84c">
             <div class="section-label">Origin</div>
             <ul>
-              <li>Built during post-war reconstruction <strong>(c. 1946–1948)</strong></li>
+              <li>Built during post-war reconstruction <strong>(c. 1946-1948)</strong></li>
               <li>Symbol of resilience and rebuilding of the university</li>
               <li>Named after <strong>Fray Diego de Herrera, OSA</strong></li>
             </ul>
@@ -487,14 +458,14 @@
           </div>`
       },
       architecture: {
-        emoji: '🧱', title: 'Architectural Style', color: '#7aab8e',
+        title: 'Architectural Style', color: '#7aab8e',
         html: `
           <div class="section" style="color:#7aab8e">
             <div class="section-label">Structural Character</div>
             <ul>
               <li>Neoclassical <strong>symmetry and proportion</strong></li>
               <li>Durable <strong>masonry and concrete</strong> construction</li>
-              <li>Strong façade — columns, pediment, rhythmic fenestration</li>
+              <li>Strong facade - columns, pediment, rhythmic fenestration</li>
             </ul>
           </div>
           <div class="section" style="color:#7aab8e">
@@ -507,13 +478,22 @@
           </div>`
       },
       condition: {
-        emoji: '⚠️', title: 'Condition Monitoring', color: '#d4654a',
+        title: 'Condition Monitoring', color: '#d4654a',
         html: `
           <div class="section" style="color:#d4654a">
             <div class="section-label">Tracked Issues</div>
-            <div class="cond-item"><span class="ci">🔍</span><span><strong>Structural Cracks</strong> — Façade and load-bearing walls</span></div>
-            <div class="cond-item"><span class="ci">💧</span><span><strong>Moisture Damage</strong> — Roof and wall penetration</span></div>
-            <div class="cond-item"><span class="ci">🪨</span><span><strong>Material Decay</strong> — Masonry surface deterioration</span></div>
+            <div class="cond-item">
+              <div class="cond-icon">${COND_ICONS_PLACEHOLDER_CRACK}</div>
+              <span><strong>Structural Cracks</strong> - Facade and load-bearing walls</span>
+            </div>
+            <div class="cond-item">
+              <div class="cond-icon">${COND_ICONS_PLACEHOLDER_WATER}</div>
+              <span><strong>Moisture Damage</strong> - Roof and wall penetration</span>
+            </div>
+            <div class="cond-item">
+              <div class="cond-icon">${COND_ICONS_PLACEHOLDER_DECAY}</div>
+              <span><strong>Material Decay</strong> - Masonry surface deterioration</span>
+            </div>
           </div>
           <div class="section" style="color:#d4654a">
             <div class="section-label">Ongoing Monitoring</div>
@@ -525,14 +505,17 @@
           </div>`
       },
       future: {
-        emoji: '🔭', title: 'Future Overlay', color: '#5b8fc2',
+        title: 'Future Overlay', color: '#5b8fc2',
         html: `
-          <div class="future-notice"><span>↔️</span><span>Drag the divider to compare models</span></div>
+          <div class="future-notice">
+            <svg viewBox="0 0 24 24"><path d="M7 16l-4-4 4-4M17 8l4 4-4 4M3 12h18"/></svg>
+            <span>Drag the divider to compare models</span>
+          </div>
           <div class="section" style="color:#5b8fc2">
             <div class="section-label">Adaptive Reuse Proposal</div>
             <ul>
               <li>Support evolving <strong>academic and administrative</strong> functions</li>
-              <li>Preserve Neoclassical façade and structural identity</li>
+              <li>Preserve Neoclassical facade and structural identity</li>
               <li>Reinforce visual continuity of the heritage campus core</li>
             </ul>
           </div>
@@ -547,11 +530,16 @@
       }
     };
 
-    /* ── ELEMENTS ── */
+    // Replace placeholders with actual SVG strings
+    MODES.condition.html = MODES.condition.html
+      .replace('${COND_ICONS_PLACEHOLDER_CRACK}', COND_ICONS.crack)
+      .replace('${COND_ICONS_PLACEHOLDER_WATER}', COND_ICONS.water)
+      .replace('${COND_ICONS_PLACEHOLDER_DECAY}', COND_ICONS.decay);
+
     const mvBefore      = document.getElementById('mv-before');
     const mvAfter       = document.getElementById('mv-after');
     const infoPanel     = document.getElementById('infoPanel');
-    const pEmoji        = document.getElementById('pEmoji');
+    const pIcon         = document.getElementById('pIcon');
     const pTitle        = document.getElementById('pTitle');
     const pBody         = document.getElementById('pBody');
     const accentLine    = document.getElementById('accentLine');
@@ -560,59 +548,41 @@
     const fxHolo        = document.getElementById('fxHolo');
     const fxCorners     = document.getElementById('fxCorners');
     const fxCornerEls   = fxCorners.querySelectorAll('.corner');
-    const modelLabel    = document.getElementById('modelLabel');
     const arLabel       = document.getElementById('arLabel');
     const arSessionUI   = document.getElementById('arSessionUI');
     const arBtnBefore   = document.getElementById('arBtnBefore');
     const arBtnAfter    = document.getElementById('arBtnAfter');
+    const arNote        = document.getElementById('arNote');
     const compareWrap   = document.getElementById('compareWrap');
     const compareLine   = document.getElementById('compareLine');
     const compareHandle = document.getElementById('compareHandle');
     const expandBtn     = document.getElementById('expandBtn');
-    const expandEmoji   = document.getElementById('expandEmoji');
+    const expandIcon    = document.getElementById('expandIcon');
     const expandLabel   = document.getElementById('expandLabel');
 
-    /* ── STATE ── */
-    let activeMode       = null;
-    let compareActive    = false;
-    let sliderPct        = 50;
-    let arCurrentModel   = 'before';
-    let pendingARReenter = false;
-    let rafSync          = null;
+    let activeMode     = null;
+    let compareActive  = false;
+    let sliderPct      = 50;
+    let arCurrentModel = 'before';
 
-    /* ── MODE OPEN / CLOSE ── */
     function openMode(mode) {
-      // Tapping the active mode button = fully exit the mode
-      if (activeMode === mode) {
-        exitMode();
-        return;
-      }
-
-      // Leaving future mode for another
+      if (activeMode === mode) { exitMode(); return; }
       if (activeMode === 'future' && mode !== 'future') exitCompare();
-
       activeMode = mode;
       const d = MODES[mode];
-
-      document.querySelectorAll('.mode-btn').forEach(b =>
-        b.classList.toggle('active', b.dataset.mode === mode));
-
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
       accentLine.style.background = d.color;
       accentLine.classList.remove('on');
       requestAnimationFrame(() => accentLine.classList.add('on'));
-
       fxCornerEls.forEach(c => c.style.color = d.color);
       fxCorners.classList.add('show');
-
-      pEmoji.textContent = d.emoji;
-      pTitle.textContent  = d.title;
-      pBody.innerHTML    = d.html;
-
+      pIcon.innerHTML   = ICONS[mode];
+      pIcon.style.color = d.color;
+      pTitle.textContent = d.title;
+      pBody.innerHTML   = d.html;
       infoPanel.classList.add('visible');
       expandBtn.classList.remove('show');
-
       triggerPulse(d.color);
-
       if (mode === 'future') enterCompare();
     }
 
@@ -626,15 +596,14 @@
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     }
 
-    /* ── PANEL MINIMIZE / EXPAND ──
-       Minimizing only hides the card — mode stays active,
-       compare layer stays visible, accent line stays on.         */
     function minimizePanel() {
+      if (!activeMode) return;
       infoPanel.classList.remove('visible');
-
       const d = MODES[activeMode];
-      expandEmoji.textContent = d.emoji;
+      expandIcon.innerHTML   = ICONS[activeMode];
+      expandIcon.style.color = d.color;
       expandLabel.textContent = d.title;
+      expandBtn.style.color  = d.color;
       expandBtn.classList.add('show');
     }
 
@@ -643,22 +612,21 @@
       expandBtn.classList.remove('show');
     }
 
-    /* ── COMPARE ── */
     function enterCompare() {
-      compareActive = true;
-      sliderPct = 50;
+      compareActive = true; sliderPct = 50;
       fxHolo.classList.add('show');
+      mvAfter.style.visibility = 'visible';
       mvAfter.classList.add('active');
       compareWrap.classList.add('show');
       updateSlider(50);
       startCameraSync();
       triggerSweep();
-      showLabel('future-st', 'Future Overlay');
     }
 
     function exitCompare() {
       compareActive = false;
       fxHolo.classList.remove('show');
+      mvAfter.style.visibility = 'hidden';
       mvAfter.classList.remove('active');
       compareWrap.classList.remove('show');
       stopCameraSync();
@@ -673,8 +641,7 @@
     }
 
     function onSliderMove(clientX) {
-      const pct = Math.max(4, Math.min(96, (clientX / window.innerWidth) * 100));
-      updateSlider(pct);
+      updateSlider(Math.max(4, Math.min(96, (clientX / window.innerWidth) * 100)));
     }
 
     compareHandle.addEventListener('mousedown', e => {
@@ -693,23 +660,24 @@
       window.addEventListener('touchend', te);
     }, { passive: false });
 
-    /* ── CAMERA SYNC ── */
-    function startCameraSync() {
-      if (rafSync) return;
-      (function sync() {
-        if (!compareActive) { rafSync = null; return; }
-        try {
-          const o = mvBefore.getCameraOrbit();
-          const t = mvBefore.getCameraTarget();
-          mvAfter.cameraOrbit  = `${o.theta}rad ${o.phi}rad ${o.radius}m`;
-          mvAfter.cameraTarget = `${t.x}m ${t.y}m ${t.z}m`;
-        } catch(e) {}
-        rafSync = requestAnimationFrame(sync);
-      })();
+    function onCameraChange() {
+      if (!compareActive) return;
+      try {
+        const o = mvBefore.getCameraOrbit();
+        const t = mvBefore.getCameraTarget();
+        mvAfter.cameraOrbit  = `${o.theta}rad ${o.phi}rad ${o.radius}m`;
+        mvAfter.cameraTarget = `${t.x}m ${t.y}m ${t.z}m`;
+      } catch(e) {}
     }
-    function stopCameraSync() { if (rafSync) { cancelAnimationFrame(rafSync); rafSync = null; } }
 
-    /* ── AR ── */
+    function startCameraSync() {
+      mvBefore.addEventListener('camera-change', onCameraChange);
+      onCameraChange();
+    }
+    function stopCameraSync() {
+      mvBefore.removeEventListener('camera-change', onCameraChange);
+    }
+
     function launchAR() {
       if (mvBefore.canActivateAR) {
         mvBefore.activateAR();
@@ -724,29 +692,24 @@
       arCurrentModel = which;
       arBtnBefore.className = which === 'before' ? 'ab' : '';
       arBtnAfter.className  = which === 'after'  ? 'aa' : '';
-      pendingARReenter = true;
       mvBefore.src = which === 'before' ? 'before.glb' : 'after.glb';
+      arNote.textContent = 'Loading... tap "View in AR" to re-enter';
     }
 
     mvBefore.addEventListener('load', () => {
-      if (pendingARReenter) {
-        pendingARReenter = false;
-        setTimeout(() => mvBefore.activateAR(), 300);
-      }
+      arNote.textContent = 'Tap "View in AR" to view in AR';
     });
 
     mvBefore.addEventListener('ar-status', e => {
-      const s = e.detail.status;
-      if (s === 'session-started') {
+      if (e.detail.status === 'session-started') {
         arSessionUI.classList.add('ar-active');
         arLabel.textContent = 'In AR Session';
-      } else if (s === 'not-presenting') {
+      } else if (e.detail.status === 'not-presenting') {
         arSessionUI.classList.remove('ar-active');
         arLabel.textContent = 'View in AR';
       }
     });
 
-    /* ── EFFECTS ── */
     function triggerSweep() {
       fxSweep.classList.remove('active');
       void fxSweep.offsetWidth;
@@ -758,12 +721,6 @@
       fxPulse.classList.remove('pop');
       void fxPulse.offsetWidth;
       fxPulse.classList.add('pop');
-    }
-    function showLabel(cls, txt) {
-      modelLabel.className = 'model-label ' + cls;
-      modelLabel.textContent = txt;
-      modelLabel.classList.add('show');
-      setTimeout(() => modelLabel.classList.remove('show'), 2200);
     }
   </script>
 
