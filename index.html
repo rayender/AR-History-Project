@@ -393,7 +393,7 @@
         <button id="arBtnBefore" class="ab" onclick="setARModel('before')">Before</button>
         <button id="arBtnAfter"  onclick="setARModel('after')">After</button>
       </div>
-      <div class="ar-note" id="arNote">Tap "View in AR" to view in AR</div>
+      <div class="ar-note">Tap to switch model in AR</div>
     </div>
   </model-viewer>
 
@@ -565,7 +565,6 @@
     const arSessionUI   = document.getElementById('arSessionUI');
     const arBtnBefore   = document.getElementById('arBtnBefore');
     const arBtnAfter    = document.getElementById('arBtnAfter');
-    const arNote        = document.getElementById('arNote');
     const compareWrap   = document.getElementById('compareWrap');
     const compareLine   = document.getElementById('compareLine');
     const compareHandle = document.getElementById('compareHandle');
@@ -578,6 +577,7 @@
     let compareActive    = false;
     let sliderPct        = 50;
     let arCurrentModel   = 'before';
+    let pendingARReenter = false;
     let rafSync          = null;
 
     /* ── MODE OPEN / CLOSE ── */
@@ -653,7 +653,7 @@
       updateSlider(50);
       startCameraSync();
       triggerSweep();
-      // No center label here — the open panel already announces "Future Overlay"
+      showLabel('future-st', 'Future Overlay');
     }
 
     function exitCompare() {
@@ -724,18 +724,15 @@
       arCurrentModel = which;
       arBtnBefore.className = which === 'before' ? 'ab' : '';
       arBtnAfter.className  = which === 'after'  ? 'aa' : '';
-
-      // Swap the model src — this exits the AR session on most devices.
-      // We do NOT auto-relaunch because scene-viewer / Quick Look open as
-      // separate apps and a forced relaunch causes the "opens another app" bug.
-      // Instead we show a prompt to re-enter AR once the model has loaded.
+      pendingARReenter = true;
       mvBefore.src = which === 'before' ? 'before.glb' : 'after.glb';
-      arNote.textContent = 'Loading… tap "View in AR" again to re-enter';
     }
 
     mvBefore.addEventListener('load', () => {
-      // Reset the note once model is ready
-      arNote.textContent = 'Tap "View in AR" to view in AR';
+      if (pendingARReenter) {
+        pendingARReenter = false;
+        setTimeout(() => mvBefore.activateAR(), 300);
+      }
     });
 
     mvBefore.addEventListener('ar-status', e => {
