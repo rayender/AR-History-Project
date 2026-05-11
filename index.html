@@ -3,32 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>AR Building Viewer</title>
+  <title>Herrera Hall — AR Heritage Viewer</title>
 
-  <!-- =============================================
-       model-viewer by Google — handles AR on iOS
-       (AR Quick Look) and Android (WebXR / Scene Viewer)
-       ============================================= -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Syne:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <style>
-    /* ── Tokens ───────────────────────────────── */
     :root {
-      --bg:          #0f0f0e;
-      --surface:     #1a1917;
-      --border:      rgba(255,255,255,0.08);
-      --text:        #f0ece4;
-      --muted:       rgba(240,236,228,0.45);
-      --accent:      #c8a96e;        /* warm gold */
-      --accent-dim:  rgba(200,169,110,0.15);
-      --before-col:  #6e8fc8;        /* cool blue  */
-      --after-col:   #c8a96e;        /* warm gold  */
-      --radius:      14px;
-      --transition:  0.35s cubic-bezier(.4,0,.2,1);
+      --bg:         #16110c;
+      --surface:    rgba(28, 20, 12, 0.92);
+      --border:     rgba(201,168,76,0.2);
+      --text:       #f5ede0;
+      --muted:      rgba(245,237,224,0.5);
+      --gold:       #c9a84c;
+      --history:    #c9a84c;
+      --arch:       #7aab8e;
+      --condition:  #d4654a;
+      --future:     #5b8fc2;
+      --radius:     16px;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,383 +32,590 @@
       overflow: hidden;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Syne', sans-serif;
+      font-family: 'DM Sans', sans-serif;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── model-viewer fills the screen ─────────── */
+    /* Subtle grain */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 100; opacity: 0.7;
+    }
+
     model-viewer {
-      width: 100%;
-      height: 100%;
-      position: fixed;
-      inset: 0;
-      background-color: var(--bg);
+      width: 100%; height: 100%;
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, #2a1f0f 0%, #16110c 70%);
       --poster-color: transparent;
+      transition: filter 0.55s ease;
     }
+    model-viewer.transitioning { filter: brightness(0.35) blur(3px); }
+    model-viewer::part(default-ar-button) { display: none; }
 
-    /* ── Override the built-in AR button ───────── */
-    model-viewer::part(default-ar-button) {
-      display: none; /* we use our own AR button */
-    }
-
-    /* ── Top bar ────────────────────────────────── */
-    .top-bar {
+    /* ── TOP HEADER ── */
+    .top-header {
       position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 10;
-      padding: env(safe-area-inset-top, 16px) 20px 0;
-      padding-top: calc(env(safe-area-inset-top, 0px) + 18px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      top: 0; left: 0; right: 0; z-index: 20;
+      padding: calc(env(safe-area-inset-top, 0px) + 18px) 20px 0;
+      background: linear-gradient(to bottom, rgba(22,17,12,0.96) 0%, rgba(22,17,12,0) 100%);
+      padding-bottom: 20px;
       pointer-events: none;
     }
 
-    .project-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 300;
-      font-size: clamp(18px, 4vw, 26px);
-      letter-spacing: 0.04em;
-      color: var(--text);
-      text-shadow: 0 2px 20px rgba(0,0,0,0.8);
-      line-height: 1.1;
-    }
-
-    .project-title span {
-      display: block;
-      font-size: 0.55em;
-      font-family: 'Syne', sans-serif;
-      font-weight: 600;
-      letter-spacing: 0.18em;
+    .header-eyebrow {
+      font-size: 9.5px;
+      font-weight: 500;
+      letter-spacing: 0.26em;
       text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 2px;
+      color: var(--gold);
+      margin-bottom: 5px;
     }
 
-    /* ── Bottom controls ────────────────────────── */
-    .controls {
+    .header-title {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: clamp(24px, 6vw, 34px);
+      line-height: 1;
+      color: var(--text);
+      text-shadow: 0 2px 24px rgba(0,0,0,0.6);
+    }
+
+    .header-meta {
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    /* ── AR BADGE (top right) ── */
+    .ar-badge {
       position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 10;
-      padding: 0 20px;
-      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-
-    /* ── Before / After pill toggle ─────────────── */
-    .toggle-pill {
-      background: rgba(15,15,14,0.7);
-      backdrop-filter: blur(20px) saturate(1.4);
-      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      top: calc(env(safe-area-inset-top, 0px) + 20px);
+      right: 16px;
+      z-index: 21;
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 5px;
-      display: flex;
-      gap: 4px;
-      width: fit-content;
-    }
-
-    .toggle-pill button {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      border: none;
-      border-radius: 999px;
-      padding: 10px 28px;
+      padding: 8px 14px 8px 11px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       cursor: pointer;
-      transition: background var(--transition), color var(--transition), box-shadow var(--transition);
-      background: transparent;
-      color: var(--muted);
-      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.18s, background 0.2s;
+    }
+    .ar-badge:active { transform: scale(0.93); }
+
+    .ar-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: dotpulse 2.2s ease infinite;
+    }
+    @keyframes dotpulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.4; transform:scale(0.65); }
     }
 
-    .toggle-pill button.active-before {
-      background: var(--before-col);
-      color: #fff;
-      box-shadow: 0 0 20px rgba(110,143,200,0.4);
-    }
-
-    .toggle-pill button.active-after {
-      background: var(--after-col);
-      color: #1a1610;
-      box-shadow: 0 0 20px rgba(200,169,110,0.45);
-    }
-
-    /* ── Bottom action row ──────────────────────── */
-    .action-row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .btn-ar {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 13px;
+    .ar-badge span {
+      font-size: 11px;
+      font-weight: 500;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 30px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      background: var(--accent);
-      color: #1a1610;
-      box-shadow: 0 4px 24px rgba(200,169,110,0.35);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-      -webkit-tap-highlight-color: transparent;
+      color: var(--text);
     }
 
-    .btn-ar:active { transform: scale(0.96); }
+    /* ── INFO PANEL ── */
+    .info-panel {
+      position: fixed;
+      left: 0; right: 0;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 106px);
+      z-index: 30;
+      padding: 0 14px;
+      transform: translateY(calc(100% + 20px));
+      opacity: 0;
+      transition: transform 0.42s cubic-bezier(.4,0,.2,1), opacity 0.42s;
+      pointer-events: none;
+    }
+    .info-panel.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: all;
+    }
 
-    .btn-ar svg {
-      width: 18px; height: 18px;
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(28px) saturate(1.7);
+      -webkit-backdrop-filter: blur(28px) saturate(1.7);
+      overflow: hidden;
+      max-height: 50vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      padding: 13px 16px 11px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
 
-    .hint {
-      font-size: 11px;
-      letter-spacing: 0.06em;
+    .card-header-left {
+      display: flex; align-items: center; gap: 9px;
+    }
+
+    .card-emoji { font-size: 20px; line-height: 1; }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .card-title em { font-style: italic; font-weight: 400; color: var(--muted); }
+
+    .close-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
       color: var(--muted);
-      text-align: center;
-      text-shadow: 0 1px 8px rgba(0,0,0,0.9);
+      font-size: 17px; line-height: 28px; text-align: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    /* ── State label badge ──────────────────────── */
-    .state-badge {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.8);
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 300;
-      font-size: clamp(36px, 10vw, 72px);
-      letter-spacing: 0.12em;
+    .card-body {
+      padding: 13px 16px 16px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .section { margin-bottom: 13px; }
+    .section:last-child { margin-bottom: 0; }
+
+    .section-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.24em;
       text-transform: uppercase;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s, transform 0.3s cubic-bezier(.34,1.56,.64,1);
-      text-shadow: 0 4px 40px rgba(0,0,0,0.8);
-      z-index: 20;
+      opacity: 0.6;
+      margin-bottom: 7px;
     }
 
-    .state-badge.show {
+    .section ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+
+    .section ul li {
+      font-size: 13px;
+      font-weight: 300;
+      line-height: 1.55;
+      color: var(--text);
+      padding-left: 15px;
+      position: relative;
+    }
+    .section ul li::before {
+      content: '–';
+      position: absolute; left: 0;
+      color: inherit; opacity: 0.45;
+    }
+
+    .values-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 9px; }
+
+    .chip {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 12px;
+      padding: 4px 13px;
+      border-radius: 999px;
+      border: 1px solid currentColor;
+      opacity: 0.8;
+    }
+
+    .cond-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(212,101,74,0.08);
+      border: 1px solid rgba(212,101,74,0.18);
+      margin-bottom: 6px;
+      font-size: 13px; color: var(--text);
+    }
+    .cond-item .ci { font-size: 15px; }
+
+    .future-notice {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 13px;
+      border-radius: 10px;
+      background: rgba(91,143,194,0.1);
+      border: 1px solid rgba(91,143,194,0.28);
+      font-size: 12px; font-weight: 500;
+      color: var(--future);
+      margin-bottom: 11px;
+    }
+
+    /* ── MODE BAR ── */
+    .mode-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 20;
+      padding: 12px 14px;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+      background: linear-gradient(to top, rgba(22,17,12,0.99) 0%, rgba(22,17,12,0) 100%);
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .mode-btn {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 5px;
+      padding: 11px 4px;
+      border-radius: 13px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(22,17,12,0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.24s cubic-bezier(.4,0,.2,1);
+    }
+
+    .mode-btn .mi { font-size: 22px; transition: transform 0.28s cubic-bezier(.34,1.56,.64,1); }
+    .mode-btn .ml {
+      font-size: 9.5px; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.24s;
+    }
+
+    .mode-btn.active .mi { transform: scale(1.18); }
+    .mode-btn.active .ml { color: currentColor; }
+    .mode-btn.active { border-color: currentColor; }
+
+    .mode-btn[data-mode="history"].active    { color:var(--history);   background:rgba(201,168,76,0.1);  }
+    .mode-btn[data-mode="architecture"].active { color:var(--arch);    background:rgba(122,171,142,0.1); }
+    .mode-btn[data-mode="condition"].active  { color:var(--condition); background:rgba(212,101,74,0.1);  }
+    .mode-btn[data-mode="future"].active     { color:var(--future);    background:rgba(91,143,194,0.1);  }
+
+    /* ── ACCENT LINE ── */
+    .accent-line {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 2.5px; z-index: 25;
+      background: var(--gold);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.5s cubic-bezier(.4,0,.2,1), background 0.3s;
+    }
+    .accent-line.on { transform: scaleX(1); }
+
+    /* ── TRANSITION FLASH ── */
+    .t-flash {
+      position: fixed; inset: 0; z-index: 50;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .t-flash.show { opacity: 1; }
+    .t-flash.future  { background: radial-gradient(ellipse at center, rgba(91,143,194,0.4) 0%, rgba(22,17,12,0.85) 100%); }
+    .t-flash.existing { background: radial-gradient(ellipse at center, rgba(201,168,76,0.4) 0%, rgba(22,17,12,0.85) 100%); }
+
+    /* ── MODEL LABEL ── */
+    .model-label {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.82);
+      z-index: 45;
+      padding: 10px 24px;
+      border-radius: 999px;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.22s, transform 0.38s cubic-bezier(.34,1.56,.64,1);
+    }
+    .model-label.show {
       opacity: 1;
       transform: translate(-50%, -50%) scale(1);
     }
-
-    .state-badge.before { color: var(--before-col); }
-    .state-badge.after  { color: var(--after-col);  }
-
-    /* ── Loading spinner ─────────────────────────── */
-    .loading-bar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--before-col), var(--after-col));
-      transform-origin: left;
-      transform: scaleX(0);
-      transition: transform 0.4s ease, opacity 0.4s ease;
-      z-index: 99;
-      opacity: 0;
-    }
-
-    .loading-bar.active {
-      opacity: 1;
-      animation: loadpulse 1.2s ease-in-out infinite;
-    }
-
-    @keyframes loadpulse {
-      0%   { transform: scaleX(0.05); }
-      50%  { transform: scaleX(0.8);  }
-      100% { transform: scaleX(0.05); }
-    }
-
-    /* ── No-model placeholder ──────────────────── */
-    .no-model-msg {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      text-align: center;
-      padding: 32px;
-      pointer-events: none;
-      z-index: 5;
-    }
-
-    .no-model-msg .icon { font-size: 48px; opacity: 0.3; }
-    .no-model-msg p { color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 280px; }
-
-    /* ── AR not supported notice ─────────────────── */
-    .ar-unavail {
-      display: none;
-      font-size: 12px;
-      color: var(--muted);
-      text-align: center;
-      max-width: 240px;
-    }
+    .model-label.existing  { color:var(--gold);   border:1px solid rgba(201,168,76,0.4);  background:rgba(201,168,76,0.1);  }
+    .model-label.future-st { color:var(--future); border:1px solid rgba(91,143,194,0.4); background:rgba(91,143,194,0.1); }
   </style>
 </head>
 <body>
 
-  <!-- Loading bar -->
-  <div class="loading-bar" id="loadingBar"></div>
+  <div class="accent-line" id="accentLine"></div>
+  <div class="t-flash" id="tFlash"></div>
+  <div class="model-label existing" id="modelLabel">Existing Structure</div>
 
-  <!-- State flash badge -->
-  <div class="state-badge" id="stateBadge"></div>
-
-  <!-- =============================================
-       TOP BAR — edit project name below
-       ============================================= -->
-  <div class="top-bar">
-    <div class="project-title">
-      <span>AR Viewer</span>
-      Building Name <!-- ✏️ Change this to your project name -->
-    </div>
-  </div>
-
-  <!-- =============================================
-       3D / AR VIEWER
-       ✏️ Replace before.glb and after.glb with your
-          actual file paths or hosted URLs.
-       ============================================= -->
+  <!-- 3D Viewer -->
   <model-viewer
     id="viewer"
     src="before.glb"
-    alt="Building 3D model"
+    alt="Herrera Hall"
     ar
     ar-modes="webxr scene-viewer quick-look"
-    ar-scale="fixed"
     camera-controls
     touch-action="pan-y"
-    shadow-intensity="1.2"
-    shadow-softness="0.8"
-    exposure="1"
+    shadow-intensity="1.4"
+    shadow-softness="0.9"
+    exposure="0.95"
     auto-rotate
-    auto-rotate-delay="3000"
-    rotation-per-second="12deg"
+    auto-rotate-delay="2500"
+    rotation-per-second="10deg"
   ></model-viewer>
 
-  <!-- No-model placeholder (shown if .glb files aren't loaded) -->
-  <div class="no-model-msg" id="noModelMsg">
-    <div class="icon">🏛️</div>
-    <p>Replace <strong>before.glb</strong> and <strong>after.glb</strong> in the HTML with your model file paths to get started.</p>
+  <!-- Top Header -->
+  <div class="top-header">
+    <div class="header-eyebrow">Heritage AR Viewer · University of San Agustin</div>
+    <div class="header-title">Herrera Hall</div>
+    <div class="header-meta">Built c. 1946–1948 &nbsp;·&nbsp; Neoclassical</div>
   </div>
 
-  <!-- =============================================
-       BOTTOM CONTROLS
-       ============================================= -->
-  <div class="controls">
+  <!-- AR Badge -->
+  <div class="ar-badge" id="arBadge" onclick="launchAR()">
+    <div class="ar-dot"></div>
+    <span id="arLabel">View in AR</span>
+  </div>
 
-    <div class="hint" id="hintText">Drag to orbit · Pinch to zoom</div>
-
-    <!-- Before / After toggle -->
-    <div class="toggle-pill" role="group" aria-label="Toggle building state">
-      <button id="btnBefore" class="active-before" onclick="setModel('before')">Before</button>
-      <button id="btnAfter"  onclick="setModel('after')">After</button>
+  <!-- Info Panel -->
+  <div class="info-panel" id="infoPanel">
+    <div class="info-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <span class="card-emoji" id="pEmoji"></span>
+          <div class="card-title" id="pTitle"></div>
+        </div>
+        <div class="close-btn" onclick="closePanel()">×</div>
+      </div>
+      <div class="card-body" id="pBody"></div>
     </div>
+  </div>
 
-    <!-- AR launch -->
-    <div class="action-row">
-      <button class="btn-ar" id="arBtn" onclick="launchAR()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
-        </svg>
-        View in AR
-      </button>
+  <!-- Mode Bar -->
+  <div class="mode-bar">
+    <div class="mode-grid">
+      <div class="mode-btn" data-mode="history"      onclick="openMode('history')">
+        <span class="mi">🏛️</span><span class="ml">History</span>
+      </div>
+      <div class="mode-btn" data-mode="architecture" onclick="openMode('architecture')">
+        <span class="mi">🧱</span><span class="ml">Architecture</span>
+      </div>
+      <div class="mode-btn" data-mode="condition"    onclick="openMode('condition')">
+        <span class="mi">⚠️</span><span class="ml">Condition</span>
+      </div>
+      <div class="mode-btn" data-mode="future"       onclick="openMode('future')">
+        <span class="mi">🔭</span><span class="ml">Future</span>
+      </div>
     </div>
-
-    <p class="ar-unavail" id="arUnavail">
-      AR requires iOS 12+ Safari or Android Chrome with ARCore. Desktop browsers show 3D only.
-    </p>
-
   </div>
 
   <script>
-    // =============================================
-    // ✏️ FILE PATHS — update these two lines with
-    //    your actual .glb file paths or hosted URLs
-    // =============================================
-    const MODELS = {
-      before: 'before.glb',   // ← your BEFORE model
-      after:  'after.glb'     // ← your AFTER model
+    const MODES = {
+      history: {
+        emoji: '🏛️',
+        title: 'Historical <em>Value</em>',
+        color: '#c9a84c',
+        html: `
+          <div class="section" style="color:#c9a84c">
+            <div class="section-label">Origin</div>
+            <ul>
+              <li>Built during post-war reconstruction <strong>(c. 1946–1948)</strong></li>
+              <li>Symbol of resilience and rebuilding of the university</li>
+              <li>Named after <strong>Fray Diego de Herrera, OSA</strong></li>
+            </ul>
+          </div>
+          <div class="section" style="color:#c9a84c">
+            <div class="section-label">Augustinian Values</div>
+            <ul>
+              <li>Core academic building of University of San Agustin</li>
+              <li>Represents the institution's founding mission</li>
+              <li>Landmark within the campus historical axis</li>
+            </ul>
+            <div class="values-row">
+              <span class="chip" style="color:#c9a84c">Unitas</span>
+              <span class="chip" style="color:#c9a84c">Caritas</span>
+              <span class="chip" style="color:#c9a84c">Veritas</span>
+            </div>
+          </div>
+        `
+      },
+      architecture: {
+        emoji: '🧱',
+        title: 'Architectural <em>Style</em>',
+        color: '#7aab8e',
+        html: `
+          <div class="section" style="color:#7aab8e">
+            <div class="section-label">Structural Character</div>
+            <ul>
+              <li>Neoclassical <strong>symmetry and proportion</strong></li>
+              <li>Use of durable <strong>masonry and concrete</strong></li>
+              <li>Strong façade — columns, pediment, rhythmic fenestration</li>
+            </ul>
+          </div>
+          <div class="section" style="color:#7aab8e">
+            <div class="section-label">Spatial & Aesthetic Value</div>
+            <ul>
+              <li>Landmark anchor along the campus axis</li>
+              <li>Contributes to institutional identity and sense of place</li>
+              <li>Harmonizes with Dolce Garcia Hall in scale and proportion</li>
+              <li>Reinforces visual continuity of the heritage core</li>
+            </ul>
+          </div>
+        `
+      },
+      condition: {
+        emoji: '⚠️',
+        title: 'Condition <em>Monitoring</em>',
+        color: '#d4654a',
+        html: `
+          <div class="section" style="color:#d4654a">
+            <div class="section-label">Tracked Issues</div>
+            <div class="cond-item"><span class="ci">🔍</span> <span><strong>Structural Cracks</strong> — Façade and load-bearing walls</span></div>
+            <div class="cond-item"><span class="ci">💧</span> <span><strong>Moisture Damage</strong> — Roof and wall penetration</span></div>
+            <div class="cond-item"><span class="ci">🪨</span> <span><strong>Material Decay</strong> — Masonry surface deterioration</span></div>
+          </div>
+          <div class="section" style="color:#d4654a">
+            <div class="section-label">Ongoing Monitoring</div>
+            <ul>
+              <li>Structural integrity of bays and columns</li>
+              <li>Moisture intrusion at joints and parapets</li>
+              <li>Surface deterioration of concrete finish</li>
+            </ul>
+          </div>
+        `
+      },
+      future: {
+        emoji: '🔭',
+        title: 'Future <em>Overlay</em>',
+        color: '#5b8fc2',
+        html: `
+          <div class="future-notice">
+            <span>🔁</span>
+            <span>Switching to proposed conservation model…</span>
+          </div>
+          <div class="section" style="color:#5b8fc2">
+            <div class="section-label">Adaptive Reuse Proposal</div>
+            <ul>
+              <li>Support evolving <strong>academic and administrative</strong> functions</li>
+              <li>Preserve Neoclassical façade and structural identity</li>
+              <li>Reinforce visual continuity of the heritage campus core</li>
+            </ul>
+          </div>
+          <div class="section" style="color:#5b8fc2">
+            <div class="section-label">Conservation Intent</div>
+            <ul>
+              <li>Retain Augustinian identity while upgrading internal layout</li>
+              <li>Contribute to ensemble and axial campus planning</li>
+              <li>Balance heritage preservation with functional evolution</li>
+            </ul>
+          </div>
+        `
+      }
     };
 
-    // ── State ────────────────────────────────────
-    let current = 'before';
+    let activeMode = null;
+    let isFuture   = false;
 
-    const viewer      = document.getElementById('viewer');
-    const btnBefore   = document.getElementById('btnBefore');
-    const btnAfter    = document.getElementById('btnAfter');
-    const stateBadge  = document.getElementById('stateBadge');
-    const loadingBar  = document.getElementById('loadingBar');
-    const arBtn       = document.getElementById('arBtn');
-    const arUnavail   = document.getElementById('arUnavail');
-    const hintText    = document.getElementById('hintText');
-    const noModelMsg  = document.getElementById('noModelMsg');
+    const viewer     = document.getElementById('viewer');
+    const infoPanel  = document.getElementById('infoPanel');
+    const pEmoji     = document.getElementById('pEmoji');
+    const pTitle     = document.getElementById('pTitle');
+    const pBody      = document.getElementById('pBody');
+    const accentLine = document.getElementById('accentLine');
+    const tFlash     = document.getElementById('tFlash');
+    const modelLabel = document.getElementById('modelLabel');
+    const arLabel    = document.getElementById('arLabel');
 
-    // ── Check AR support ─────────────────────────
-    viewer.addEventListener('load', () => {
-      noModelMsg.style.display = 'none';
-      loadingBar.classList.remove('active');
-
-      const canAR = viewer.canActivateAR;
-      arBtn.style.display   = canAR ? '' : 'none';
-      arUnavail.style.display = canAR ? 'none' : 'block';
-    });
-
-    viewer.addEventListener('progress', (e) => {
-      loadingBar.classList.add('active');
-    });
-
-    viewer.addEventListener('error', () => {
-      loadingBar.classList.remove('active');
-    });
-
-    // ── Toggle model ─────────────────────────────
-    function setModel(state) {
-      if (current === state) return;
-      current = state;
-
-      // Swap src
-      loadingBar.classList.add('active');
-      viewer.src = MODELS[state];
-
-      // Button styles
-      btnBefore.className = state === 'before' ? 'active-before' : '';
-      btnAfter.className  = state === 'after'  ? 'active-after'  : '';
-
-      // Flash badge
-      stateBadge.className = 'state-badge ' + state;
-      stateBadge.textContent = state === 'before' ? 'Before' : 'After';
-      stateBadge.classList.add('show');
-      setTimeout(() => stateBadge.classList.remove('show'), 1400);
-    }
-
-    // ── AR launch ─────────────────────────────────
-    function launchAR() {
-      viewer.activateAR();
-    }
-
-    // ── AR session hint ───────────────────────────
-    viewer.addEventListener('ar-status', (e) => {
-      if (e.detail.status === 'session-started') {
-        hintText.textContent = 'Point at a flat surface to place the building';
-      } else if (e.detail.status === 'not-presenting') {
-        hintText.textContent = 'Drag to orbit · Pinch to zoom';
+    function openMode(mode) {
+      if (activeMode === mode) {
+        closePanel();
+        if (mode === 'future') revertModel();
+        return;
       }
+      if (activeMode === 'future' && mode !== 'future') revertModel();
+
+      activeMode = mode;
+      const d = MODES[mode];
+
+      document.querySelectorAll('.mode-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.mode === mode));
+
+      accentLine.style.background = d.color;
+      accentLine.classList.remove('on');
+      requestAnimationFrame(() => accentLine.classList.add('on'));
+
+      pEmoji.textContent = d.emoji;
+      pTitle.innerHTML   = d.title;
+      pBody.innerHTML    = d.html;
+      infoPanel.classList.add('visible');
+
+      if (mode === 'future' && !isFuture) {
+        setTimeout(swapToFuture, 420);
+      }
+    }
+
+    function closePanel() {
+      infoPanel.classList.remove('visible');
+      accentLine.classList.remove('on');
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      activeMode = null;
+    }
+
+    function swapToFuture() {
+      isFuture = true;
+      flash('future');
+      viewer.classList.add('transitioning');
+      setTimeout(() => {
+        viewer.src = 'after.glb';
+        viewer.classList.remove('transitioning');
+        showLabel('future-st', 'Future Overlay');
+      }, 520);
+    }
+
+    function revertModel() {
+      if (!isFuture) return;
+      isFuture = false;
+      flash('existing');
+      viewer.classList.add('transitioning');
+      setTimeout(() => {
+        viewer.src = 'before.glb';
+        viewer.classList.remove('transitioning');
+        showLabel('existing', 'Existing Structure');
+      }, 520);
+    }
+
+    function flash(cls) {
+      tFlash.className = 't-flash ' + cls;
+      tFlash.classList.add('show');
+      setTimeout(() => tFlash.classList.remove('show'), 750);
+    }
+
+    function showLabel(cls, txt) {
+      modelLabel.className = 'model-label ' + cls;
+      modelLabel.textContent = txt;
+      modelLabel.classList.add('show');
+      setTimeout(() => modelLabel.classList.remove('show'), 2200);
+    }
+
+    function launchAR() {
+      if (viewer.canActivateAR) {
+        viewer.activateAR();
+      } else {
+        arLabel.textContent = 'Open on Mobile for AR';
+        setTimeout(() => arLabel.textContent = 'View in AR', 2800);
+      }
+    }
+
+    viewer.addEventListener('ar-status', e => {
+      if (e.detail.status === 'not-presenting') arLabel.textContent = 'View in AR';
     });
   </script>
 
