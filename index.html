@@ -426,11 +426,7 @@
       future: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`
     };
 
-    const COND_ICONS = {
-      crack: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M10 8l1 3-2 2 3 2"/></svg>`,
-      water: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 15a8 8 0 0 0 16 0c0-3-2-7-8-13z"/></svg>`,
-      decay: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>`
-    };
+
 
     const MODES = {
       history: {
@@ -483,15 +479,15 @@
           <div class="section" style="color:#d4654a">
             <div class="section-label">Tracked Issues</div>
             <div class="cond-item">
-              <div class="cond-icon">${COND_ICONS_PLACEHOLDER_CRACK}</div>
+              <div class="cond-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M10 8l1 3-2 2 3 2"/></svg></div>
               <span><strong>Structural Cracks</strong> - Facade and load-bearing walls</span>
             </div>
             <div class="cond-item">
-              <div class="cond-icon">${COND_ICONS_PLACEHOLDER_WATER}</div>
+              <div class="cond-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 15a8 8 0 0 0 16 0c0-3-2-7-8-13z"/></svg></div>
               <span><strong>Moisture Damage</strong> - Roof and wall penetration</span>
             </div>
             <div class="cond-item">
-              <div class="cond-icon">${COND_ICONS_PLACEHOLDER_DECAY}</div>
+              <div class="cond-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4654a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 8 17 11 21 13 13 16 17 20 17"/></svg></div>
               <span><strong>Material Decay</strong> - Masonry surface deterioration</span>
             </div>
           </div>
@@ -530,11 +526,7 @@
       }
     };
 
-    // Replace placeholders with actual SVG strings
-    MODES.condition.html = MODES.condition.html
-      .replace('${COND_ICONS_PLACEHOLDER_CRACK}', COND_ICONS.crack)
-      .replace('${COND_ICONS_PLACEHOLDER_WATER}', COND_ICONS.water)
-      .replace('${COND_ICONS_PLACEHOLDER_DECAY}', COND_ICONS.decay);
+
 
     const mvBefore      = document.getElementById('mv-before');
     const mvAfter       = document.getElementById('mv-after');
