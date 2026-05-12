@@ -32,7 +32,7 @@
     /* ── VIEWERS ── */
     model-viewer {
       width:100%; height:100%; position:fixed; inset:0;
-      background: radial-gradient(ellipse at 50% 35%, #2e2215 0%, #16110c 65%);
+      background: radial-gradient(ellipse at 40% 30%, #3a2a14 0%, #1e160a 45%, #16110c 100%);
       --poster-color:transparent;
     }
     model-viewer::part(default-ar-button) { display:none; }
@@ -290,9 +290,10 @@
     src="before.glb"
     alt="Herrera Hall - Existing"
     ar ar-modes="webxr scene-viewer quick-look"
-    shadow-intensity="1.8"
-    shadow-softness="0.6"
-    exposure="1.15"
+    environment-image="legacy"
+    shadow-intensity="2.2"
+    shadow-softness="0.45"
+    exposure="1.3"
     tone-mapping="commerce"
   >
     <div class="ar-session-ui" id="arSessionUI">
@@ -309,9 +310,10 @@
     id="mv-after"
     src="after.glb"
     alt="Herrera Hall - Future"
-    shadow-intensity="1.8"
-    shadow-softness="0.6"
-    exposure="1.15"
+    environment-image="legacy"
+    shadow-intensity="2.2"
+    shadow-softness="0.45"
+    exposure="1.3"
     tone-mapping="commerce"
     style="pointer-events:none;"
   ></model-viewer>
