@@ -38,9 +38,10 @@
     model-viewer::part(default-ar-button) { display:none; }
 
     /* mv-before on top (z:2) — owns all pointer events for zoom */
-    #mv-before { z-index:2; }
-    /* mv-after below (z:1) — never receives pointer events */
-    #mv-after  { z-index:1; pointer-events:none; opacity:0; clip-path:polygon(50% 0%,100% 0%,100% 100%,50% 100%); transition:opacity 0.4s ease; visibility:hidden; }
+    /* mv-before below: handles touch/zoom events */
+    #mv-before { z-index:1; }
+    /* mv-after on top: visible through clip-path, pointer-events:none so touches fall through */
+    #mv-after  { z-index:2; pointer-events:none; opacity:0; clip-path:polygon(50% 0%,100% 0%,100% 100%,50% 100%); transition:opacity 0.4s ease; }
     #mv-after.active { opacity:1; }
 
     /* ── EFFECTS ── */
@@ -321,7 +322,7 @@
     shadow-softness="0.6"
     exposure="1.15"
     tone-mapping="commerce"
-    style="pointer-events:none; visibility:hidden;"
+    style="pointer-events:none;"
   ></model-viewer>
 
   <!-- Compare slider -->
@@ -674,7 +675,6 @@
     function enterCompare() {
       isCompare = true;
       fxHolo.classList.add('show');
-      mvAfter.style.visibility = 'visible';
       mvAfter.classList.add('active');
       compareWrap.classList.add('show');
       updateSlider(50);
@@ -686,7 +686,6 @@
     function exitCompare() {
       isCompare = false;
       fxHolo.classList.remove('show');
-      mvAfter.style.visibility = 'hidden';
       mvAfter.classList.remove('active');
       compareWrap.classList.remove('show');
     }
