@@ -37,8 +37,8 @@
       --poster-color: transparent; transition: filter 0.5s ease;
     }
     model-viewer::part(default-ar-button) { display: none; }
-    #mv-before { z-index: 2; }
-    #mv-after  { z-index: 1; }
+    #mv-before { z-index: 1; }
+    #mv-after  { z-index: 2; }
     #mv-after {
       pointer-events: none; opacity: 0;
       clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
@@ -311,7 +311,6 @@
     id="mv-after"
     src="after.glb"
     alt="Herrera Hall - Future"
-    camera-controls
     interpolation-decay="Infinity"
     shadow-intensity="1.4" shadow-softness="0.9" exposure="1.0"
     style="pointer-events:none; visibility:hidden;"
