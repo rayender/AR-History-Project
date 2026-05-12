@@ -44,22 +44,8 @@
     #mv-after  { z-index:2; pointer-events:none; opacity:0; clip-path:polygon(50% 0%,100% 0%,100% 100%,50% 100%); transition:opacity 0.4s ease; }
     #mv-after.active { opacity:1; }
 
+
     /* ── EFFECTS ── */
-    .fx-corners {
-      position:fixed; inset:0; z-index:8; pointer-events:none;
-      opacity:0; transition:opacity 0.4s;
-    }
-    .fx-corners.show { opacity:1; }
-    .corner {
-      position:absolute; width:26px; height:26px;
-      border-color:currentColor; border-style:solid;
-      animation:cpulse 3s ease-in-out infinite;
-    }
-    .corner.tl { top:82px;     left:14px;  border-width:2px 0 0 2px; }
-    .corner.tr { top:82px;     right:14px; border-width:2px 2px 0 0; }
-    .corner.bl { bottom:128px; left:14px;  border-width:0 0 2px 2px; }
-    .corner.br { bottom:128px; right:14px; border-width:0 2px 2px 0; }
-    @keyframes cpulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
     .fx-sweep {
       position:fixed; inset:0; z-index:50; pointer-events:none;
@@ -165,24 +151,25 @@
     /* ── TOP HEADER ── */
     .top-header {
       position:fixed; top:0; left:0; right:0; z-index:20;
-      padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 18px;
+      padding:calc(env(safe-area-inset-top,0px) + 14px) 18px 16px;
       background:linear-gradient(to bottom,rgba(22,17,12,0.97) 0%,rgba(22,17,12,0) 100%);
-      pointer-events:none;
+      pointer-events:none; text-align:center;
     }
-    .header-eyebrow { font-size:9px; font-weight:600; letter-spacing:0.26em; text-transform:uppercase; color:var(--gold); margin-bottom:4px; }
-    .header-title { font-size:clamp(22px,5.5vw,30px); font-weight:700; line-height:1.05; color:var(--text); text-shadow:0 2px 20px rgba(0,0,0,0.6); }
-    .header-meta { font-size:10px; font-weight:400; letter-spacing:0.1em; color:var(--muted); margin-top:3px; text-transform:uppercase; }
+    .header-eyebrow { font-size:9px; font-weight:600; letter-spacing:0.26em; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+    .header-title { font-size:clamp(18px,4.5vw,26px); font-weight:700; line-height:1.05; color:var(--text); text-shadow:0 2px 20px rgba(0,0,0,0.6); margin-bottom:5px; }
+    .header-meta { font-size:10px; font-weight:400; letter-spacing:0.1em; color:var(--muted); margin-top:0; text-transform:uppercase; }
 
     /* ── AR BADGE ── */
     .ar-badge {
-      position:fixed; top:calc(env(safe-area-inset-top,0px) + 16px); right:14px; z-index:21;
+      position:fixed; top:calc(env(safe-area-inset-top,0px) + 72px); left:50%; transform:translateX(-50%); z-index:21;
       display:flex; align-items:center; gap:7px;
       background:var(--surface); border:1px solid var(--border);
-      border-radius:999px; padding:10px 16px 10px 12px;
+      border-radius:999px; padding:10px 20px 10px 14px;
       backdrop-filter:blur(16px); cursor:pointer;
-      -webkit-tap-highlight-color:transparent; transition:transform 0.18s; min-height:44px;
+      -webkit-tap-highlight-color:transparent; transition:transform 0.18s, top 0.3s; min-height:44px;
+      white-space:nowrap;
     }
-    .ar-badge:active { transform:scale(0.93); }
+    .ar-badge:active { transform:translateX(-50%) scale(0.93); }
     .ar-dot { width:8px; height:8px; border-radius:50%; background:var(--gold); animation:dp 2.2s ease infinite; }
     @keyframes dp { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.6)} }
     .ar-badge span { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text); }
@@ -280,15 +267,19 @@
     .expand-btn .eico { width:15px; height:15px; display:flex; }
     .expand-btn .eico svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
     @keyframes expandbounce { from{transform:translateX(-50%) scale(0.8);opacity:0} to{transform:translateX(-50%) scale(1);opacity:1} }
+
+    /* ── BG OVERLAY (mode tint) ── */
+    .bg-overlay {
+      position:fixed; inset:0; z-index:3; pointer-events:none;
+      opacity:0; transition:opacity 0.5s ease, background 0.5s ease;
+    }
+    .bg-overlay.show { opacity:1; }
   </style>
 </head>
 <body>
 
+  <div class="bg-overlay" id="bgOverlay"></div>
   <div class="fx-holo"    id="fxHolo"></div>
-  <div class="fx-corners" id="fxCorners">
-    <div class="corner tl"></div><div class="corner tr"></div>
-    <div class="corner bl"></div><div class="corner br"></div>
-  </div>
   <div class="fx-sweep" id="fxSweep"></div>
   <div class="fx-pulse" id="fxPulse"></div>
   <div class="accent-line" id="accentLine"></div>
@@ -514,13 +505,12 @@
     const fxSweep       = document.getElementById('fxSweep');
     const fxPulse       = document.getElementById('fxPulse');
     const fxHolo        = document.getElementById('fxHolo');
-    const fxCorners     = document.getElementById('fxCorners');
-    const fxCornerEls   = fxCorners.querySelectorAll('.corner');
     const arLabel       = document.getElementById('arLabel');
     const arSessionUI   = document.getElementById('arSessionUI');
     const arBtnBefore   = document.getElementById('arBtnBefore');
     const arBtnAfter    = document.getElementById('arBtnAfter');
     const arNote        = document.getElementById('arNote');
+    const bgOverlay     = document.getElementById('bgOverlay');
     const compareWrap   = document.getElementById('compareWrap');
     const compareLine   = document.getElementById('compareLine');
     const compareHandle = document.getElementById('compareHandle');
@@ -631,14 +621,15 @@
       accentLine.style.background = d.color;
       accentLine.classList.remove('on');
       requestAnimationFrame(() => accentLine.classList.add('on'));
-      fxCornerEls.forEach(c => c.style.color = d.color);
-      fxCorners.classList.add('show');
       pIcon.innerHTML    = ICONS[mode];
       pIcon.style.color  = d.color;
       pTitle.textContent = d.title;
       pBody.innerHTML    = d.html;
       infoPanel.classList.add('visible');
       expandBtn.classList.remove('show');
+      // Tint the background with the mode colour
+      bgOverlay.style.background = `radial-gradient(ellipse at 50% 60%, ${d.color}18 0%, transparent 70%)`;
+      bgOverlay.classList.add('show');
       triggerPulse(d.color);
       if (mode === 'future') enterCompare();
     }
@@ -651,7 +642,7 @@
       infoPanel.classList.remove('visible');
       expandBtn.classList.remove('show');
       accentLine.classList.remove('on');
-      fxCorners.classList.remove('show');
+      bgOverlay.classList.remove('show');
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     }
 
@@ -721,8 +712,16 @@
       } else if (e.detail.status === 'not-presenting') {
         arSessionUI.classList.remove('ar-active');
         arLabel.textContent = 'View in AR';
+        // Reset model back to before.glb when leaving AR
+        if (arCurrentModel !== 'before') {
+          arCurrentModel = 'before';
+          arBtnBefore.className = 'ab';
+          arBtnAfter.className  = '';
+          mvBefore.src = 'before.glb';
+        }
       }
     });
+
 
     /* ── EFFECTS ── */
     function triggerSweep() {
